@@ -1,0 +1,27 @@
+{{define "content"}}
+<div class="page-head"><div>
+  <h1>FodyCloud MCP server</h1>
+  <p>Let an AI assistant such as Claude Code create, deploy and debug your apps, with the same rules as the dashboard.</p>
+</div></div>
+<div class="grid-2">
+  <section class="card">
+    <div class="card-head"><h2>Connect</h2></div>
+    <div class="card-body stack">
+      <p>Endpoint (Streamable HTTP), authenticated with an API token from your dashboard's
+        <a href="{{.URL "dashboard" "/account"}}">Account &amp; API</a> page:</p>
+      <pre class="log">{{.URL "mcp" "/mcp"}}</pre>
+      <p>Claude Code:</p>
+      <pre class="log">claude mcp add --transport http fodycloud {{.URL "mcp" "/mcp"}} \
+  --header "Authorization: Bearer fc_…"</pre>
+    </div>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>Learn more</h2></div>
+    <div class="card-body stack">
+      <p><a href="{{.URL "docs" "/developer/mcp"}}">AI assistants (MCP)</a>: other clients, the tools, and how assistants ask you to confirm the stack.</p>
+      <p>Use a read-only token (untick <strong>Allow changes</strong>) to let an assistant look without changing anything.</p>
+      <p>Admin actions are never available over MCP.</p>
+    </div>
+  </section>
+</div>
+{{end}}

@@ -1,0 +1,40 @@
+name: Stack request
+description: Ask for a new language, framework or version.
+labels: ["stack-request", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        FodyCloud only uses open-source software, so the runtime must have an OSI-approved license. The steps to add a stack are in [CONTRIBUTING.md](https://github.com/fodydev/fodycloud/blob/main/CONTRIBUTING.md#propose-a-new-stack).
+  - type: input
+    id: stack
+    attributes:
+      label: Language and framework
+      placeholder: e.g. Ruby · Rails, or Python 3.14
+    validations:
+      required: true
+  - type: input
+    id: sample
+    attributes:
+      label: Sample repository
+      description: A public GitHub, GitLab or Codeberg repository that should deploy with this stack.
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: Runtime license
+      description: The license of the language runtime and the framework, with a link.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters
+      description: Who would use it (a course, a lab, a community)?
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contributing
+      options:
+        - label: I'd like to add this stack myself.

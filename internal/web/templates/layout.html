@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Title}} · FodyCloud</title>
+  <meta name="description" content="FodyCloud: deploy your apps from public Git repositories. Your code. Your deployment. Your cloud.">
+  <meta name="theme-color" content="#0F1724">
+  <link rel="icon" type="image/svg+xml" href="/static/brand/emblem.svg">
+  <meta name="htmx-config" content='{"includeIndicatorStyles":false,"allowEval":false}'>
+  <link rel="stylesheet" href="{{asset "app.css"}}">
+  <script src="{{asset "htmx.min.js"}}" defer></script>
+  <script src="{{asset "app.js"}}" defer></script>
+  {{block "head" .}}{{end}}
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="{{if eq .Site "admin"}}/{{else if .User}}{{.URL "dashboard" "/apps"}}{{else}}{{.URL "home" "/"}}{{end}}" aria-label="FodyCloud home">
+        <img src="/static/brand/emblem.svg" alt="" width="32" height="32">
+        <span class="wordmark"><b>Fody</b><span>Cloud</span></span>{{if eq .Site "admin"}} <span class="pill">admin</span>{{end}}
+      </a>
+      {{if eq .Site "admin"}}
+        <nav class="topnav" aria-label="Main">{{if .Admin}}
+          <a href="/" {{if eq .Nav "admin"}}aria-current="page"{{end}}>Panel</a>
+          <a href="/docs" {{if eq .Nav "docs"}}aria-current="page"{{end}}>Admin guide</a>{{end}}
+        </nav>
+        {{with .Admin}}<div class="topuser">
+          <span class="sr-only">Signed in as admin</span><span>{{.Email}}</span>
+          <form method="post" action="/logout" class="inline"><button class="btn ghost small">Log out</button></form>
+        </div>{{end}}
+      {{else if .User}}
+        <nav class="topnav" aria-label="Main">
+          <a href="{{.URL "dashboard" "/apps"}}" {{if or (eq .Nav "apps") (eq .Nav "app") (eq .Nav "log")}}aria-current="page"{{end}}>Apps</a>
+          <a href="{{.URL "dashboard" "/account"}}" {{if eq .Nav "account"}}aria-current="page"{{end}}>Account &amp; API</a>
+          <a href="{{.URL "docs" "/"}}" {{if eq .Nav "docs"}}aria-current="page"{{end}}>Docs</a>
+        </nav>
+        <div class="topuser">
+          <span class="sr-only">Signed in as</span><span>{{.User.Email}}</span>
+          <form method="post" action="{{.URL "dashboard" "/logout"}}" class="inline"><button class="btn ghost small">Log out</button></form>
+        </div>
+      {{else}}
+        <nav class="topnav" aria-label="Main">
+          <a href="{{.URL "docs" "/"}}" {{if eq .Nav "docs"}}aria-current="page"{{end}}>Docs</a>
+          <a href="{{.URL "api" "/"}}" {{if eq .Nav "apihome"}}aria-current="page"{{end}}>API</a>
+          <a href="{{.URL "mcp" "/"}}" {{if eq .Nav "mcphome"}}aria-current="page"{{end}}>MCP</a>
+        </nav>
+        <div class="topuser">
+          <a href="{{.URL "dashboard" "/login"}}" class="btn ghost small">Log in</a>
+          <a href="{{.URL "dashboard" "/signup"}}" class="btn small">Sign up</a>
+        </div>
+      {{end}}
+    </div>
+  </header>
+  <main>
+    {{if .NeedsVerification}}
+      <div class="flash warn" role="status">Confirm your email address ({{.User.Email}}) to deploy apps.
+        <form method="post" action="{{.URL "dashboard" "/verify/resend"}}" class="inline"><button class="link">Resend the link</button></form></div>
+    {{end}}
+    {{with .OK}}<div class="flash ok" role="status">{{.}}</div>{{end}}
+    {{with .Err}}<div class="flash err" role="alert">{{.}}</div>{{end}}
+    {{template "content" .}}
+  </main>
+  <footer class="footer">
+    <div class="footer-inner">
+      <span><strong>FodyCloud</strong> · Your code. Your deployment. Your cloud.</span>
+      <span><a href="{{.URL "docs" "/"}}">Documentation</a> · <a href="{{.URL "api" "/"}}">API</a> · <a href="{{.URL "mcp" "/"}}">MCP</a> · <a href="{{.URL "home" "/legal/terms"}}">Terms</a> · <a href="{{.URL "home" "/legal/acceptable-use"}}">Acceptable use</a> · <a href="{{.URL "home" "/legal/privacy"}}">Privacy</a> · <a href="{{.URL "home" "/source"}}">Source code</a> · A <a href="https://github.com/fodydev">FodyDev</a> open-source project</span>
+    </div>
+  </footer>
+</body>
+</html>

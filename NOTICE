@@ -1,0 +1,21 @@
+FodyCloud
+Copyright 2026 FodyDev and the FodyCloud contributors
+
+FodyCloud is free software: you can redistribute it and/or modify it under the
+terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version. See LICENSE.
+
+Contributors keep the copyright of their contributions and license them under
+the same terms (see CONTRIBUTING.md, "Licensing and sign-off"). The copyright
+and license of each file are given by its SPDX header or by REUSE.toml.
+
+Third-party code included in this repository:
+- htmx 2.0.11 (internal/web/static/htmx.min.js), Copyright Big Sky Software,
+  BSD Zero Clause License (LICENSES/0BSD.txt).
+- CODE_OF_CONDUCT.md is adapted from the Contributor Covenant 2.1
+  (https://www.contributor-covenant.org), Creative Commons Attribution 4.0
+  (LICENSES/CC-BY-4.0.txt).
+
+The names "FodyCloud" and "FodyDev" and the FodyCloud logo are not licensed
+under the AGPL: see TRADEMARKS.md.

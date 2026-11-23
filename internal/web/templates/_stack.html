@@ -1,0 +1,60 @@
+{{/* Language → framework → version picker with prefilled, editable commands.
+     Changing a select swaps this block through htmx (GET /apps/{app}/stack-form);
+     without JavaScript the form still submits whatever is selected. */}}
+{{define "stackfields"}}
+<div class="stack stack-fields">
+  <div class="grid-form">
+    <label>Language
+      <select name="language" hx-get="/apps/{{.App}}/stack-form" hx-trigger="change" hx-target="closest .stack-fields" hx-swap="outerHTML" hx-include="closest form" required>
+        {{if not .Language.ID}}<option value="">Choose a language…</option>{{end}}
+        {{range .Languages}}<option value="{{.ID}}" {{if eq .ID $.Language.ID}}selected{{end}}>{{.Label}}</option>{{end}}
+      </select>
+    </label>
+    {{if .Language.ID}}
+    <label>Framework
+      <select name="framework" hx-get="/apps/{{.App}}/stack-form" hx-trigger="change" hx-target="closest .stack-fields" hx-swap="outerHTML" hx-include="closest form">
+        {{range .Language.Presets}}<option value="{{.ID}}" {{if eq .ID $.Preset.ID}}selected{{end}}>{{.Label}}</option>{{end}}
+      </select>
+    </label>
+    {{if .Language.Versions}}
+    <label>Version
+      <select name="version">
+        <option value="">Automatic</option>
+        {{range .Language.Versions}}<option value="{{.}}" {{if eq . $.Stack.Version}}selected{{end}}>{{$.Language.Label}} {{.}}</option>{{end}}
+      </select>
+    </label>
+    {{end}}
+    {{end}}
+  </div>
+  {{if .Language.ID}}
+    {{with .Preset.Hint}}<p class="hint">{{.}}</p>{{end}}
+  {{end}}
+  <div class="grid-form">
+    <label>Working directory <input name="root_dir" maxlength="200" value="{{.Stack.RootDir}}" placeholder="(repository root)" pattern="[A-Za-z0-9._/\-]*">
+      <small class="hint">Folder of the repository where the build and run commands execute, e.g. <code>frontend</code> or <code>apps/web</code>. Empty for the root.</small></label>
+  </div>
+  {{if .Language.ID}}
+    <div class="grid-form">
+    {{if .Preset.Static}}
+      {{if .Preset.Build}}
+      <label>Build command <input name="build_command" maxlength="2000" value="{{.Stack.BuildCommand}}">
+        <small class="hint">Produces the website in the publish folder.</small></label>
+      {{end}}
+      <label>Publish folder <input name="publish_dir" maxlength="200" value="{{.Stack.PublishDir}}" required pattern="[A-Za-z0-9._/\-]+">
+        <small class="hint">The folder served as the website (it contains index.html), relative to the working directory. Use . for the working directory itself.</small></label>
+    {{else}}
+      <label>Build command <input name="build_command" maxlength="2000" value="{{.Stack.BuildCommand}}" placeholder="(none)">
+        <small class="hint">Optional. Runs after dependencies are installed.</small></label>
+      {{if .Preset.DocRoot}}
+      <label>Publish folder <input name="publish_dir" maxlength="200" value="{{.Stack.PublishDir}}" required pattern="[A-Za-z0-9._/\-]+">
+        <small class="hint">The folder that contains <code>index.php</code>, relative to the working directory, e.g. <code>public</code> or <code>web</code>. Use . for the working directory itself.</small></label>
+      {{end}}
+      {{if not .Language.ServedBy}}
+      <label>Run command <input name="start_command" maxlength="2000" value="{{.Stack.StartCommand}}" {{if .Preset.Custom}}required{{end}} placeholder="{{if eq .Language.ID "go"}}e.g. ./out{{else if eq .Language.ID "java"}}(automatic){{else}}e.g. python server.py{{end}}">
+        <small class="hint">Must start a server listening on <code>$PORT</code>.{{if eq .Language.ID "java"}} Leave empty to use the detected Maven or Gradle command.{{end}}</small></label>
+      {{end}}
+    {{end}}
+    </div>
+  {{end}}
+</div>
+{{end}}

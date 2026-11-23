@@ -1,0 +1,26 @@
+{{define "content"}}
+<section class="hero">
+  <img src="/static/brand/emblem.svg" alt="FodyCloud" width="96" height="96">
+  <h1>Fody<span>Cloud</span></h1>
+  <p class="lead">Your code. Your deployment. Your cloud. Cloud hosting built for African students and researchers.</p>
+  <div class="cta">
+    <a class="btn" href="{{.URL "dashboard" "/signup"}}">Create a free account</a>
+    <a class="btn ghost" href="{{.URL "dashboard" "/login"}}">Log in</a>
+  </div>
+  <p class="hint"><a href="{{.URL "docs" "/user/getting-started"}}">New here? Put your first app online in ten minutes</a></p>
+</section>
+<div class="features">
+  <article class="feature">
+    <h2><span class="dot green"></span>Deploy from Git</h2>
+    <p>Paste a public GitHub, GitLab or Codeberg repository. FodyCloud detects the language and framework, you confirm or adjust them, and it builds and runs your app.</p>
+  </article>
+  <article class="feature">
+    <h2><span class="dot gold"></span>HTTPS by default</h2>
+    <p>Every app gets <code>&lt;name&gt;.apps.{{.BaseDomain}}</code> with a certificate, and can use your own domain on student and research plans.</p>
+  </article>
+  <article class="feature">
+    <h2><span class="dot red"></span>Built for learning</h2>
+    <p>Free plan for experiments, generous plans for student and research projects, and an API and MCP server so AI agents can deploy for you.</p>
+  </article>
+</div>
+{{end}}

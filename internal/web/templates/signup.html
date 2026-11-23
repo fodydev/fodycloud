@@ -1,0 +1,22 @@
+{{define "content"}}
+<section class="auth">
+  <div class="auth-head">
+    <img src="/static/brand/emblem.svg" alt="" width="48" height="48">
+    <h1>Create your FodyCloud account</h1>
+  </div>
+  <div class="card"><div class="card-body">
+    <form method="post" action="/signup" class="stack">
+      <label>Email <input type="email" name="email" required autocomplete="email" autofocus></label>
+      <label>Password <small class="muted">At least 10 characters.</small>
+        <input type="password" name="password" required minlength="10" maxlength="72" autocomplete="new-password"></label>
+      <label class="check"><input type="checkbox" name="accept_terms" value="1" required>
+        <span>I accept the <a href="{{.URL "home" "/legal/terms"}}" target="_blank" rel="noopener">Terms of service</a> and the
+        <a href="{{.URL "home" "/legal/acceptable-use"}}" target="_blank" rel="noopener">Acceptable-use policy</a>, and I have read the
+        <a href="{{.URL "home" "/legal/privacy"}}" target="_blank" rel="noopener">Privacy policy</a>.</span></label>
+      <button class="btn block">Create account</button>
+    </form>
+  </div></div>
+  <p class="muted center">You start on the free plan; larger plans are assigned by the FodyCloud team.<br>
+    Already registered? <a href="/login">Log in</a></p>
+</section>
+{{end}}

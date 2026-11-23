@@ -1,0 +1,26 @@
+{{define "content"}}
+<div class="page-head"><div>
+  <h1>FodyCloud API</h1>
+  <p>Create, deploy and manage your apps from scripts, CI pipelines and your own tools.</p>
+</div></div>
+<div class="grid-2">
+  <section class="card">
+    <div class="card-head"><h2>Base URL</h2></div>
+    <div class="card-body stack">
+      <pre class="log">{{.URL "api" "/v1"}}</pre>
+      <p>Send JSON, and authenticate every request with an API token from your dashboard's
+        <a href="{{.URL "dashboard" "/account"}}">Account &amp; API</a> page:</p>
+      <pre class="log">curl -H "Authorization: Bearer fc_…" {{.URL "api" "/v1/me"}}</pre>
+    </div>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>Get started</h2></div>
+    <div class="card-body stack">
+      <p><a href="{{.URL "docs" "/developer/overview"}}">Quick start</a>: deploy an app with curl in five minutes.</p>
+      <p><a href="{{.URL "docs" "/developer/api-reference"}}">API reference</a>: every endpoint, request and response.</p>
+      <p><a href="{{.URL "docs" "/developer/authentication"}}">Authentication</a>: tokens and scopes.</p>
+      <p><a href="{{.URL "docs" "/developer/ci-cd"}}">Deploy from CI</a>: GitHub Actions and GitLab CI.</p>
+    </div>
+  </section>
+</div>
+{{end}}

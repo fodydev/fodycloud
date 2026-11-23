@@ -1,0 +1,48 @@
+# Copy to terraform.tfvars and adjust.
+
+# --- VPS access -------------------------------------------------------------
+host                 = "203.0.113.10" # public IP of the VPS
+ssh_port             = 22
+ssh_user             = "root" # or a sudo user
+ssh_private_key_path = "~/.ssh/id_ed25519"
+# ssh_host_key       = "ssh-ed25519 AAAA..." # recommended: pin the server's host key
+
+# --- Platform ---------------------------------------------------------------
+base_domain = "fodycloud.example"
+acme_email  = "ops@fodycloud.example"
+# acme_staging = true # test against the Let's Encrypt staging CA first
+
+# Optional: wildcard certificate for *.apps.<base_domain> via DNS-01.
+# Provider codes: https://doc.traefik.io/traefik/https/acme/#providers
+# acme_dns_provider = "cloudflare"
+# acme_dns_env      = { CF_DNS_API_TOKEN = "..." }
+
+# --- Host -------------------------------------------------------------------
+data_disk_device = "/dev/sdb" # second disk/volume for /var/lib/docker (XFS + quotas); "" to skip
+swap_size_gb     = 4
+timezone         = "Africa/Douala"
+admin_ssh_cidrs  = ["0.0.0.0/0", "::/0"] # restrict to your office/VPN if possible
+
+# --- Control plane ----------------------------------------------------------
+admin_email = "you@fodycloud.example" # initial dashboard admin; password: tofu output -raw admin_password
+# build_concurrency = 2               # simultaneous student builds
+# builder_cpus      = 2               # BuildKit builder limits
+# builder_memory    = "4g"
+
+# --- Email (verification, password reset, plan reminders, admin alerts) -----
+# smtp_host     = "smtp.example.com"
+# smtp_port     = 587                      # STARTTLS (465 = implicit TLS)
+# smtp_username = "..."
+# smtp_password = "..."
+# mail_from     = "FodyCloud <no-reply@fodycloud.example>"
+
+# --- Off-site backups (restic, any S3-compatible storage) --------------------
+# backup_s3_endpoint   = "https://s3.eu-central-003.backblazeb2.com"
+# backup_s3_bucket     = "fodycloud-backups/prod"
+# backup_s3_access_key = "..."
+# backup_s3_secret_key = "..."
+# restic_password      = ""                # empty = generated; KEEP A COPY (tofu output -raw restic_password)
+
+# --- Abuse protection ---------------------------------------------------------
+# abuse_cpu_minutes     = 30               # minutes at the CPU limit before an app is flagged
+# signup_limit_per_hour = 5                # signups / password resets per IP

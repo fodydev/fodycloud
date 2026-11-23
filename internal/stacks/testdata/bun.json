@@ -1,0 +1,43 @@
+{
+  "detectedProviders": [
+    "node"
+  ],
+  "metadata": {
+    "nodePackageManager": "bun",
+    "nodeRuntime": "bun",
+    "providers": "node"
+  },
+  "resolvedPackages": {
+    "bun": {
+      "resolvedVersion": "1.4.4"
+    }
+  },
+  "logs": [
+    {
+      "level": "info",
+      "msg": "Detected Node"
+    },
+    {
+      "level": "info",
+      "msg": "Using bun package manager"
+    },
+    {
+      "level": "info",
+      "msg": "Custom start command detected, skipping Caddy start"
+    },
+    {
+      "level": "info",
+      "msg": "Bun runtime detected"
+    },
+    {
+      "level": "suggestion",
+      "msg": "Applying default exclude patterns: `node_modules`. Add a `.dockerignore` to customize"
+    }
+  ],
+  "success": true,
+  "plan": {
+    "deploy": {
+      "startCommand": "bun run start"
+    }
+  }
+}

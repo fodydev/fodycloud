@@ -1,0 +1,55 @@
+name: Bug report
+description: Something in FodyCloud doesn't work as documented.
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. **Security issues must not be reported here**: see [SECURITY.md](https://github.com/fodydev/fodycloud/blob/main/SECURITY.md).
+        Remove secrets (tokens, passwords, environment variables) from anything you paste.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Dashboard
+        - Build (stack detection, build logs)
+        - Deploy and runtime (my app doesn't start, sleep, domains)
+        - Storage and databases
+        - REST API
+        - MCP server
+        - Admin panel
+        - Installing or running a platform (OpenTofu, server scripts)
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead. Quote error messages exactly.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: For build or deploy problems, include the public repository and branch, and the stack you chose.
+      placeholder: |
+        1. Create an app from https://github.com/…
+        2. Confirm the stack Python · Flask
+        3. …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The "version" of `GET /v1/about`, or the version shown on the platform's Source code page. For a platform you run, the commit you deployed.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Build log, app log or control-plane log lines, if relevant (secrets removed).
+      render: text

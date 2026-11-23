@@ -1,0 +1,37 @@
+{
+  "detectedProviders": [
+    "java"
+  ],
+  "metadata": {
+    "javaPackageManager": "gradle",
+    "providers": "java"
+  },
+  "resolvedPackages": {
+    "gradle": {
+      "resolvedVersion": "9.8.2"
+    },
+    "java": {
+      "resolvedVersion": "21.0.13+9.0.LTS"
+    }
+  },
+  "logs": [
+    {
+      "level": "info",
+      "msg": "Detected Java"
+    },
+    {
+      "level": "info",
+      "msg": "Using Gradle"
+    },
+    {
+      "level": "suggestion",
+      "msg": "Add a `.dockerignore` file to exclude files from the build"
+    }
+  ],
+  "success": true,
+  "plan": {
+    "deploy": {
+      "startCommand": "java $JAVA_OPTS -jar -Dserver.port=$PORT $(ls -1 */build/libs/*jar | grep -v plain)"
+    }
+  }
+}

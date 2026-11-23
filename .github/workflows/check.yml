@@ -1,0 +1,51 @@
+# Runs every static check (scripts/check.sh) and the sign-off check on each
+# pull request and push to main. The QEMU VM suites are not run here: they
+# stay a manual step before each release (CONTRIBUTING.md, Releases).
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: scripts/check.sh
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      # Actions are pinned to a commit; Dependabot proposes updates.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (MIT)
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0 (MIT)
+        with:
+          go-version-file: go.mod
+      - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2 (MPL-2.0)
+        with:
+          tofu_version: 1.13.9
+          tofu_wrapper: false
+      # shellcheck comes from the runner; reuse runs from its pinned image.
+      - run: scripts/check.sh
+
+  signoff:
+    name: Sign-off (DCO)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (MIT)
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - run: scripts/check-signoff.sh "${BASE_SHA}..${HEAD_SHA}"
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}

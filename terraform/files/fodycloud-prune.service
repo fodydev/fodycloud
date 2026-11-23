@@ -1,0 +1,11 @@
+[Unit]
+Description=FodyCloud build cache and old image cleanup
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+# Keep the BuildKit cache under 20 GB.
+ExecStart=/usr/bin/docker compose --project-directory /opt/fodycloud exec -T control-plane docker buildx prune --builder fodycloud-builder --force --keep-storage 20gb
+# Remove app images unused for 14 days (images of running containers are kept; recent ones allow rollback).
+ExecStart=/usr/bin/docker image prune --all --force --filter label=fodycloud.app --filter until=336h

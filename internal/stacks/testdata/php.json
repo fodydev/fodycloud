@@ -1,0 +1,33 @@
+{
+  "detectedProviders": [
+    "php"
+  ],
+  "metadata": {
+    "providers": "php"
+  },
+  "resolvedPackages": {
+    "php": {
+      "resolvedVersion": "8.4.28"
+    }
+  },
+  "logs": [
+    {
+      "level": "info",
+      "msg": "Detected Php"
+    },
+    {
+      "level": "info",
+      "msg": "Found web command in Procfile"
+    },
+    {
+      "level": "suggestion",
+      "msg": "Add a `.dockerignore` file to exclude files from the build"
+    }
+  ],
+  "success": true,
+  "plan": {
+    "deploy": {
+      "startCommand": "heroku-php-apache2 web/"
+    }
+  }
+}

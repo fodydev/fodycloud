@@ -1,0 +1,14 @@
+{
+  "log-driver": "local",
+  "log-opts": { "max-size": "10m", "max-file": "3" },
+  "live-restore": true,
+  "no-new-privileges": true,
+  "userland-proxy": false,
+  "storage-driver": "overlay2",
+  "default-ulimits": {
+    "nofile": { "Name": "nofile", "Soft": 65536, "Hard": 65536 }
+  },
+  "default-address-pools": [
+    { "base": "172.20.0.0/14", "size": 24 }
+  ]
+}

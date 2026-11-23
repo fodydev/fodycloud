@@ -1,0 +1,15 @@
+{{define "content"}}
+<section class="auth">
+  <div class="auth-head">
+    <img src="/static/brand/emblem.svg" alt="" width="48" height="48">
+    <h1>Reset your password</h1>
+  </div>
+  <div class="card"><div class="card-body">
+    <form method="post" action="/forgot" class="stack">
+      <label>Email <input type="email" name="email" required autocomplete="email" autofocus></label>
+      <button class="btn block">Send a reset link</button>
+    </form>
+  </div></div>
+  <p class="muted center"><a href="/login">Back to log in</a></p>
+</section>
+{{end}}

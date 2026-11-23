@@ -1,0 +1,37 @@
+{
+  "detectedProviders": [
+    "java"
+  ],
+  "metadata": {
+    "javaPackageManager": "maven",
+    "providers": "java"
+  },
+  "resolvedPackages": {
+    "java": {
+      "resolvedVersion": "21.0.13+9.0.LTS"
+    },
+    "maven": {
+      "resolvedVersion": "3.10.0"
+    }
+  },
+  "logs": [
+    {
+      "level": "info",
+      "msg": "Detected Java"
+    },
+    {
+      "level": "info",
+      "msg": "Using Maven"
+    },
+    {
+      "level": "suggestion",
+      "msg": "Add a `.dockerignore` file to exclude files from the build"
+    }
+  ],
+  "success": true,
+  "plan": {
+    "deploy": {
+      "startCommand": "java  $JAVA_OPTS -jar target/*jar"
+    }
+  }
+}

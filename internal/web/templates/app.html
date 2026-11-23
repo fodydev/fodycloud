@@ -1,0 +1,258 @@
+{{define "head"}}{{if eq .Data.App.Status "detecting"}}<meta http-equiv="refresh" content="4">{{end}}{{end}}
+{{define "content"}}
+{{$app := .Data.App}}
+<div class="breadcrumb"><a href="/apps">Apps</a> / {{$app.Name}}</div>
+<div class="page-head">
+  <div>
+    <h1>{{$app.Name}} <span class="status {{$app.Status}}">{{$app.Status}}</span></h1>
+    <p><a href="{{$app.URL}}" target="_blank" rel="noopener">{{$app.URL}}</a>
+      {{range $app.Domains}} · <a href="https://{{.}}" target="_blank" rel="noopener">{{.}}</a>{{end}}</p>
+  </div>
+  {{if $app.StackConfirmed}}
+  <div class="actions">
+    <form method="post" action="/apps/{{$app.Name}}/deploy"><button class="btn">Deploy latest</button></form>
+    <form method="post" action="/apps/{{$app.Name}}/restart"><button class="btn ghost">Restart</button></form>
+    <form method="post" action="/apps/{{$app.Name}}/rollback"><button class="btn ghost">Roll back</button></form>
+    {{if eq $app.Status "stopped"}}
+      <form method="post" action="/apps/{{$app.Name}}/start"><button class="btn ghost">Start</button></form>
+    {{else}}
+      <form method="post" action="/apps/{{$app.Name}}/stop"><button class="btn ghost">Stop</button></form>
+    {{end}}
+  </div>
+  {{end}}
+</div>
+
+{{with $app.StopsOn}}
+<div class="flash warn" role="status">This app has had no visits or deployments for a long time and will be stopped on
+  <strong>{{date .}}</strong>. Visit it or deploy it again to keep it running.
+  <a href="{{$.URL "docs" "/user/plans-and-limits#unused-apps"}}">Learn more</a></div>
+{{end}}
+
+{{if eq $app.Status "detecting"}}
+<section class="card review-card">
+  <div class="card-head"><div><h2>Analysing your repository…</h2><p>FodyCloud is cloning the repository and looking for its language and framework. Nothing is deployed yet.</p></div><span class="status building">analysing</span></div>
+  <div class="card-body"><p class="hint">This page refreshes automatically.</p></div>
+</section>
+{{else if not $app.StackConfirmed}}
+<section class="card review-card">
+  <div class="card-head"><div><h2>Review your stack</h2>
+    <p>{{with $app.Detection}}{{.Message}}{{else}}Choose how FodyCloud should build and run your app.{{end}}
+      <a href="{{$.URL "docs" "/user/stacks"}}">How to choose your stack</a></p></div>
+    {{with $app.Detection}}{{if .Detected}}<span class="status running">detected</span>{{else}}<span class="status failed">not detected</span>{{end}}{{end}}
+  </div>
+  <div class="card-body stack">
+    {{with $app.Detection}}{{if .Detected}}
+    <dl class="stats">
+      <div class="stat"><dt>Detected</dt><dd>{{with .Suggested}}{{stacklabel .}}{{end}}</dd></div>
+      {{with .RootDir}}<div class="stat"><dt>In folder</dt><dd class="mono">{{.}}/</dd></div>{{end}}
+      {{with .Version}}<div class="stat"><dt>Version</dt><dd>{{.}}</dd></div>{{end}}
+    </dl>
+    {{end}}
+    {{with .Logs}}<details><summary class="hint">What the analysis found</summary><pre class="log">{{range .}}{{.}}
+{{end}}</pre></details>{{end}}
+    {{end}}
+    <form method="post" action="/apps/{{$app.Name}}/stack" class="stack">
+      {{template "stackfields" .Data.Form}}
+      <div class="actions">
+        <button class="btn">Confirm and deploy</button>
+      </div>
+    </form>
+    <form method="post" action="/apps/{{$app.Name}}/analyse" class="inline-form analyse-form">
+      <label class="sr-only" for="analyse-dir">Folder to analyse</label>
+      <input id="analyse-dir" name="root_dir" value="{{$app.Stack.RootDir}}" placeholder="folder to analyse (empty = whole repository)" maxlength="200" pattern="[A-Za-z0-9._/\-]*">
+      <button class="btn ghost small">Analyse again</button>
+    </form>
+  </div>
+</section>
+{{end}}
+
+<section class="card">
+  <div class="card-body">
+    <dl class="stats">
+      <div class="stat"><dt>Repository</dt><dd class="mono">{{$app.RepoURL}}</dd></div>
+      <div class="stat"><dt>Branch</dt><dd class="mono">{{$app.Branch}}{{with $app.Stack.RootDir}} · {{.}}/{{end}}</dd></div>
+      <div class="stat"><dt>Stack</dt><dd>{{if $app.StackConfirmed}}{{stacklabel $app.Stack}}{{else}}Waiting for review{{end}}</dd></div>
+      <div class="stat"><dt>Plan</dt><dd>{{.Data.Plan.Plan}} · {{.Data.Plan.Limits.CPUs}} vCPU · {{.Data.Plan.Limits.Memory}}</dd></div>
+    </dl>
+  </div>
+</section>
+
+<div class="grid-2">
+  <div>
+    {{with .Data.Latest}}
+    <section class="card">
+      <div class="card-head"><h2>Latest deployment #{{.ID}}</h2><a href="/apps/{{$app.Name}}/deployments/{{.ID}}/log">Full log</a></div>
+      <div class="card-body" hx-get="/apps/{{$app.Name}}/deployments/{{.ID}}/log" hx-trigger="load">Loading log…</div>
+    </section>
+    {{end}}
+
+    {{if $app.StackConfirmed}}
+    <section class="card">
+      <div class="card-head"><div><h2>Metrics</h2><p>CPU, memory and requests, measured every minute.</p></div>
+        <nav class="segmented" aria-label="Time range">{{range .Data.Ranges}}<a href="?range={{.}}" {{if eq . $.Data.Range}}aria-current="true"{{end}}>{{.}}</a>{{end}}</nav></div>
+      <div class="card-body metrics">
+        {{range .Data.Charts}}
+        <figure class="metric">
+          <figcaption><span>{{.Title}}</span><strong>{{.Latest}}</strong></figcaption>
+          {{.SVG}}
+          {{with .Limit}}<small class="hint">{{.}}</small>{{end}}
+        </figure>
+        {{end}}
+      </div>
+    </section>
+    {{end}}
+
+    {{if $app.StackConfirmed}}
+    {{$live := or (eq $app.Status "running") (eq $app.Status "sleeping")}}
+    <section class="card">
+      <div class="card-head"><h2>Runtime logs</h2><span class="hint">Last 200 lines</span></div>
+      <div class="card-body">
+        <div class="logbox" data-log-box>
+          {{template "logbar" (dict "Live" $live "Every" "5 s" "Download" (printf "/apps/%s/runtime-log?download=1" $app.Name))}}
+          <pre class="log" data-log="runtime-{{$app.Name}}" hx-get="/apps/{{$app.Name}}/runtime-log" hx-trigger="{{if $live}}load, every 5s{{else}}load{{end}}">…</pre>
+          {{template "logjump"}}
+        </div>
+      </div>
+    </section>
+    {{end}}
+
+    <section class="card">
+      <div class="card-head"><h2>Deployments</h2></div>
+      <div class="table-wrap">
+        <table class="list">
+          <thead><tr><th>#</th><th>Kind</th><th>Status</th><th>Commit</th><th>Started</th><th>Duration</th><th></th></tr></thead>
+          <tbody>
+          {{range .Data.Deployments}}
+            <tr><td>{{.ID}}</td><td>{{.Kind}}</td><td><span class="status {{.Status}}">{{.Status}}</span></td>
+              <td class="mono">{{short .CommitSHA}}</td><td>{{date .CreatedAt}}</td>
+              <td>{{with .DurationSeconds}}{{duration .}}{{else}}—{{end}}</td>
+              <td><a href="/apps/{{$app.Name}}/deployments/{{.ID}}/log">Log</a></td></tr>
+          {{end}}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div>
+    {{if $app.StackConfirmed}}
+    <section class="card">
+      <div class="card-head"><div><h2>Stack</h2><p>{{stacklabel $app.Stack}}{{with $app.Stack.Version}} · {{.}}{{end}}</p></div></div>
+      <div class="card-body stack">
+        {{with $app.Stack.RootDir}}<p class="hint">Working directory: <code>{{.}}/</code></p>{{end}}
+        {{if $app.Stack.PublishDir}}<p class="hint">Serves the folder <code>{{$app.Stack.PublishDir}}</code> as static files.</p>{{end}}
+        {{with $app.Stack.BuildCommand}}<p class="hint">Build: <code>{{.}}</code></p>{{end}}
+        {{with $app.Stack.StartCommand}}<p class="hint">Run: <code>{{.}}</code></p>{{end}}
+        <details>
+          <summary class="link">Change stack</summary>
+          <form method="post" action="/apps/{{$app.Name}}/stack" class="stack">
+            {{template "stackfields" .Data.Form}}
+            <div><button class="btn small">Save and rebuild</button></div>
+          </form>
+        </details>
+      </div>
+    </section>
+    {{end}}
+
+    <section class="card">
+      <div class="card-head"><div><h2>Environment variables</h2><p>Values are masked. Saving restarts the app. <a href="{{$.URL "docs" "/user/environment-variables"}}">Learn more</a></p></div></div>
+      <div class="table-wrap">
+        <table class="list">
+          <tbody>
+          {{range $k, $v := .Data.Env}}
+            <tr><td class="mono">{{$k}}</td><td class="mono muted">{{$v}}</td>
+              <td><form method="post" action="/apps/{{$app.Name}}/env"><input type="hidden" name="key" value="{{$k}}">
+                <input type="hidden" name="delete" value="1"><button class="link danger">Delete</button></form></td></tr>
+          {{else}}<tr><td class="muted">No variables yet.</td></tr>{{end}}
+          </tbody>
+        </table>
+      </div>
+      <div class="card-body">
+        <form method="post" action="/apps/{{$app.Name}}/env" class="inline-form">
+          <input name="key" placeholder="KEY" required pattern="[A-Za-z_][A-Za-z0-9_]*" aria-label="Variable name">
+          <input name="value" placeholder="value" aria-label="Value">
+          <button class="btn small">Save</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h2>Storage and databases</h2><p>Adding or deleting one restarts the app.
+        <a href="{{$.URL "docs" "/user/storage"}}">Files that are kept</a> · <a href="{{$.URL "docs" "/user/databases"}}">Databases</a></p></div></div>
+      <div class="card-body stack">
+      {{range .Data.Services}}
+        <div class="storage-row">
+          <div><strong>{{.Name}}</strong>
+            {{with .Service}}
+              {{if .Blocked}}<span class="status failed">blocked</span>{{else if .ReadOnly}}<span class="status failed">read-only: full</span>{{end}}
+              <p class="hint">{{if .MeasuredAt}}{{bytes .UsedBytes}} used of {{.Limit}}{{else}}Limit {{.Limit}}{{end}}{{with .Path}} · mounted at <code>{{.}}</code>{{end}}</p>
+              {{with .URL}}<details><summary>Show the connection URL</summary><pre class="log">{{.}}</pre></details>{{end}}
+            {{else}}
+              <p class="hint">{{.Hint}}{{if .Included}} Up to {{.Limit}} on your plan.{{end}}</p>
+            {{end}}
+          </div>
+          {{if .Service}}
+            <form method="post" action="/apps/{{$app.Name}}/services/{{.Kind}}/delete" class="inline-form">
+              <input name="confirm" required placeholder="{{$app.Name}}" aria-label="Type the app name to delete the {{.Name}}" autocomplete="off">
+              <button class="btn danger small">Delete with its data</button>
+            </form>
+          {{else if .Included}}
+            <form method="post" action="/apps/{{$app.Name}}/services/{{.Kind}}"><button class="btn small">Add</button></form>
+          {{else}}
+            <p class="muted">Not included in the {{$.Data.Plan.Plan}} plan.</p>
+          {{end}}
+        </div>
+      {{end}}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h2>Health check</h2><p>Checked on each deployment before the new version goes live. Leave empty to turn off.
+        <a href="{{$.URL "docs" "/user/health-checks"}}">How health checks work</a></p></div></div>
+      <div class="card-body">
+        <form method="post" action="/apps/{{$app.Name}}/health-check" class="inline-form">
+          <input name="path" value="{{$app.HealthCheckPath}}" placeholder="/healthz" maxlength="200" aria-label="Health-check path">
+          <button class="btn small">Save</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h2>Custom domains</h2><p><a href="{{$.URL "docs" "/user/custom-domains"}}">How to use your own domain</a></p></div></div>
+      <div class="card-body">
+      {{$max := .Data.Plan.Limits.MaxCustomDomains}}
+      {{if $max}}
+        <p class="hint">{{len $app.Domains}} of {{$max}} custom domains.</p>
+        {{range $app.Domains}}
+          <div class="inline-form">
+            <span class="mono">{{.}}</span>
+            <form method="post" action="/apps/{{$app.Name}}/domains/check" class="inline"><input type="hidden" name="hostname" value="{{.}}">
+              <button class="link">Check DNS</button></form>
+            <form method="post" action="/apps/{{$app.Name}}/domains/remove" class="inline"><input type="hidden" name="hostname" value="{{.}}">
+              <button class="link danger">Remove</button></form>
+          </div>
+        {{end}}
+        {{if lt (len $app.Domains) $max}}
+        <form method="post" action="/apps/{{$app.Name}}/domains" class="inline-form">
+          <input name="hostname" placeholder="www.example.com" required aria-label="Domain">
+          <button class="btn small">Add domain</button>
+        </form>
+        {{end}}
+      {{else}}
+        <p class="muted">Custom domains are not included in the {{.Data.Plan.Plan}} plan.</p>
+      {{end}}
+      </div>
+    </section>
+
+    <section class="card danger-zone">
+      <div class="card-head"><div><h2>Delete app</h2><p>Removes the app, its deployments and settings. This cannot be undone.</p></div></div>
+      <div class="card-body">
+        <form method="post" action="/apps/{{$app.Name}}/delete" class="inline-form">
+          <input name="confirm" placeholder="type {{$app.Name}} to confirm" required aria-label="Confirm app name">
+          <button class="btn danger small">Delete permanently</button>
+        </form>
+      </div>
+    </section>
+  </div>
+</div>
+{{end}}

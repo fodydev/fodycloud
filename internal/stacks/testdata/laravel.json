@@ -1,0 +1,57 @@
+{
+  "detectedProviders": [
+    "php"
+  ],
+  "metadata": {
+    "phpFramework": "laravel",
+    "providers": "php"
+  },
+  "resolvedPackages": {
+    "node": {
+      "resolvedVersion": "24.22.2"
+    },
+    "php": {
+      "resolvedVersion": "8.2.36"
+    }
+  },
+  "logs": [
+    {
+      "level": "info",
+      "msg": "Detected Php"
+    },
+    {
+      "level": "info",
+      "msg": "Found laravel app"
+    },
+    {
+      "level": "warn",
+      "msg": "No node package manager detected, using npm"
+    },
+    {
+      "level": "suggestion",
+      "msg": "Specify the package manager and version explicitly"
+    },
+    {
+      "level": "info",
+      "msg": "Installing Node"
+    },
+    {
+      "level": "suggestion",
+      "msg": "Add a `package-lock.json` for more deterministic installs"
+    },
+    {
+      "level": "info",
+      "msg": "Pruning node dependencies"
+    },
+    {
+      "level": "suggestion",
+      "msg": "Add a `.dockerignore` file to exclude files from the build"
+    }
+  ],
+  "success": true,
+  "plan": {
+    "deploy": {
+      "startCommand": "/start-container.sh"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+# shellcheck settings for every script in this repository (scripts/check.sh).
+# Follow `source` statements; paths are relative to the repository root.
+external-sources=true
+source-path=SCRIPTDIR
+source-path=.
+
+# The tests pass code in single quotes to `bash -c '…' _ "$arg"` on purpose:
+# its $ must expand in the inner shell, with the outer value as $1.
+disable=SC2016

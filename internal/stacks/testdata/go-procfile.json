@@ -1,0 +1,40 @@
+{
+  "detectedProviders": [
+    "golang"
+  ],
+  "metadata": {
+    "goGin": "true",
+    "goMod": "true",
+    "goRootFile": "true",
+    "providers": "golang"
+  },
+  "resolvedPackages": {
+    "go": {
+      "resolvedVersion": "1.27.4"
+    }
+  },
+  "logs": [
+    {
+      "level": "info",
+      "msg": "Detected Golang"
+    },
+    {
+      "level": "info",
+      "msg": "Using go mod"
+    },
+    {
+      "level": "info",
+      "msg": "Found web command in Procfile"
+    },
+    {
+      "level": "suggestion",
+      "msg": "Add a `.dockerignore` file to exclude files from the build"
+    }
+  ],
+  "success": true,
+  "plan": {
+    "deploy": {
+      "startCommand": "go-getting-started"
+    }
+  }
+}

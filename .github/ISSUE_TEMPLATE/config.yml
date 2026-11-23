@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/fodydev/fodycloud/security/advisories/new
+    about: Please report security issues privately, never in a public issue (see SECURITY.md).
+  - name: A problem with your account or apps on a FodyCloud platform
+    url: https://github.com/fodydev/fodycloud/blob/main/docs/user/logs-and-troubleshooting.md
+    about: Read the troubleshooting guide first. Account, plan and ban questions go to the people who run your platform, not to this repository.

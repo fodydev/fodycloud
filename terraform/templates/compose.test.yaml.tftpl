@@ -1,0 +1,54 @@
+# LOCAL TESTS ONLY (test_fixtures = true): stand-ins for external services.
+# Never enabled in production. Rendered by OpenTofu.
+services:
+  # SMTP catcher: the control plane sends mail to mailpit:1025; tests read it
+  # through the API on 127.0.0.1:8025 (VM-local only).
+  mailpit:
+    image: axllent/mailpit:v1.32.0
+    restart: unless-stopped
+    networks: [platform, edge]
+    ports:
+      - "127.0.0.1:8025:8025"
+    mem_limit: 128m
+
+  # S3-compatible storage for restic backups (no auth configured).
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.51
+    restart: unless-stopped
+    # Small volumes, enough slots: each new bucket grows 7 volumes at once.
+    command: ["server", "-s3", "-dir=/data", "-ip=seaweedfs", "-ip.bind=0.0.0.0", "-volume.max=32", "-master.volumeSizeLimitMB=64"]
+    networks: [s3]
+    volumes:
+      - seaweedfs:/data
+    mem_limit: 512m
+
+%{ if test_ca ~}
+  # Local ACME CA: Traefik gets real certificates through the same HTTP-01
+  # flow as with Let's Encrypt. Its root (made by qemu/ca-init.sh) is
+  # name-constrained to ${base_domain} and trusted on the developer's PC.
+  step-ca:
+    image: smallstep/step-ca:0.30.2
+    restart: unless-stopped
+    environment:
+      DOCKER_STEPCA_INIT_NAME: FodyCloud Test CA
+      DOCKER_STEPCA_INIT_DNS_NAMES: ca.${base_domain}
+      DOCKER_STEPCA_INIT_ACME: "true"
+    volumes:
+      - ./test-ca/root_ca.crt:/run/secrets/root_ca.crt:ro
+      - ./test-ca/root_ca_key:/run/secrets/root_ca_key:ro
+      - stepca:/home/step
+    networks:
+      edge:
+        aliases: [ca.${base_domain}]
+    mem_limit: 128m
+%{ endif ~}
+
+networks:
+  s3:
+    name: fodycloud-s3
+
+volumes:
+  seaweedfs:
+%{ if test_ca ~}
+  stepca:
+%{ endif ~}

@@ -1,0 +1,13 @@
+{{/* Toolbar of a log box. Args (dict): Live (bool), Every (refresh period;
+     empty for a pushed log), Download (URL).
+     Pause and Jump only work with app.js, so they start hidden. */}}
+{{define "logbar"}}
+<div class="logbar">
+  {{if .Live}}<span class="live" data-log-live>Live{{with .Every}} · every {{.}}{{end}}</span>{{else}}<span class="live done">Finished</span>{{end}}
+  <span class="logbar-actions">
+    {{if .Live}}<button type="button" class="btn ghost small" data-log-pause data-js aria-pressed="false" hidden>Pause</button>{{end}}
+    <a class="btn ghost small" href="{{.Download}}" download>Download</a>
+  </span>
+</div>
+{{end}}
+{{define "logjump"}}<button type="button" class="btn small logjump" data-log-jump hidden>Jump to latest ↓</button>{{end}}

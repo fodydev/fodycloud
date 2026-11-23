@@ -1,0 +1,15 @@
+[Unit]
+Description=FodyCloud host firewall (nftables table inet fodycloud)
+Wants=network-pre.target
+Before=network-pre.target docker.service
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/fodycloud/firewall.nft
+ExecReload=/usr/sbin/nft -f /etc/fodycloud/firewall.nft
+ExecStop=-/usr/sbin/nft delete table inet fodycloud
+
+[Install]
+WantedBy=sysinit.target

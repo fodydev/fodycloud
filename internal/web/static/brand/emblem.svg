@@ -1,0 +1,28 @@
+<!-- FodyCloud emblem, from FodyDev/brand (CC0 1.0) -->
+<svg
+   width="256"
+   height="256"
+   viewBox="0 0 128 128"
+   role="img"
+   aria-labelledby="emTitle"
+   version="1.1"
+   xmlns="http://www.w3.org/2000/svg"
+  >
+  <title
+     id="emTitle">FodyCloud emblem</title>
+  <rect
+     width="128"
+     height="128"
+     rx="18"
+     fill="#0F1724"
+     />
+  <!-- cloud outline -->
+  <defs><mask id="cloudmask" maskUnits="userSpaceOnUse" x="0" y="0" width="128" height="128"><rect width="128" height="128" fill="#000" /><g fill="#fff" transform="translate(82,56) scale(0.62) translate(-64,-65)" ><rect x="22" y="70" width="84" height="26" rx="13" /><circle cx="40" cy="78" r="18" /><circle cx="64" cy="60" r="26" /><circle cx="88" cy="74" r="18" /></g><g fill="#000" transform="translate(82,56) scale(0.62) translate(-64,-65)" ><rect x="29" y="70" width="70" height="19" rx="6" /><circle cx="40" cy="78" r="11" /><circle cx="64" cy="60" r="19" /><circle cx="88" cy="74" r="11" /></g></mask></defs>
+  <rect width="128" height="128" fill="#ffffff" opacity="0.95" mask="url(#cloudmask)" />
+  <!-- tree: three stacked chevrons (unchanged from FodyDev) -->
+  <g transform="translate(26,29)">
+    <path d="M 0,34 22,0 44,34 Z" fill="#1e8f3e" />
+    <path d="M 0,44 22,10 44,44 Z" fill="#f2c94c" transform="translate(0,6)" />
+    <path d="M 0,54 22,20 44,54 Z" fill="#e33e2b" transform="translate(0,12)" />
+  </g>
+</svg>

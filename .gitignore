@@ -1,0 +1,11 @@
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+terraform/terraform.tfvars
+*.auto.tfvars
+
+# Local QEMU test VM (images, disks, throwaway keys)
+qemu/.work/

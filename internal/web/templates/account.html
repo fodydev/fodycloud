@@ -1,0 +1,88 @@
+{{define "content"}}
+<div class="page-head">
+  <div><h1>Account &amp; API</h1><p>Your plan, your sign-in details, and tokens for the API and AI agents.</p></div>
+</div>
+
+{{with .Data.Plan}}
+<section class="card">
+  <div class="card-head"><div><h2>Plan: {{.Plan}}</h2><p>Plans are assigned by the FodyCloud team. Contact them to upgrade.</p></div></div>
+  <div class="card-body">
+    {{if .Expired}}<div class="flash err" role="alert">Your {{.AssignedPlan}} plan expired; you are back on {{.Plan}}.</div>{{end}}
+    <dl class="stats">
+      <div class="stat"><dt>vCPU per app</dt><dd>{{.Limits.CPUs}}</dd></div>
+      <div class="stat"><dt>Memory per app</dt><dd>{{.Limits.Memory}}</dd></div>
+      <div class="stat"><dt>Disk per app</dt><dd>{{.Limits.Disk}}</dd></div>
+      <div class="stat"><dt>Apps</dt><dd>{{.AppsUsed}} of {{.Limits.MaxApps}}</dd></div>
+      <div class="stat"><dt>Custom domains per app</dt><dd>{{if .Limits.MaxCustomDomains}}{{.Limits.MaxCustomDomains}}{{else}}Not included{{end}}</dd></div>
+      <div class="stat"><dt>Valid until</dt><dd>{{date .ValidUntil}}</dd></div>
+    </dl>
+  </div>
+</section>
+{{end}}
+
+<section class="card">
+  <div class="card-head"><div><h2>API tokens</h2><p>For the <a href="{{.URL "api" "/"}}">REST API</a> (<code>{{.URL "api" "/v1"}}</code>) and the MCP server for AI agents. <a href="{{.URL "docs" "/developer/authentication"}}">How to use tokens</a></p></div></div>
+  <div class="card-body">
+    {{with .Data.NewToken}}
+      <div class="flash ok" role="status"><strong>New token — copy it now, it won't be shown again:</strong><pre class="log">{{.}}</pre></div>
+    {{end}}
+    <p class="hint">Connect Claude Code: <code>claude mcp add --transport http fodycloud https://mcp.{{.BaseDomain}}/mcp --header "Authorization: Bearer &lt;token&gt;"</code></p>
+  </div>
+  <div class="table-wrap">
+    <table class="list">
+      <thead><tr><th>Name</th><th>Prefix</th><th>Scopes</th><th>Last used</th><th></th></tr></thead>
+      <tbody>
+      {{range .Data.Tokens}}
+        <tr><td>{{.Name}}</td><td class="mono">{{.Prefix}}…</td><td>{{join .Scopes ", "}}</td><td>{{date .LastUsedAt}}</td>
+          <td><form method="post" action="/account/tokens/{{.ID}}/revoke"><button class="link danger">Revoke</button></form></td></tr>
+      {{else}}<tr><td class="muted" colspan="5">No tokens yet.</td></tr>{{end}}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-body">
+    <form method="post" action="/account/tokens" class="inline-form">
+      <input name="name" placeholder="Token name, e.g. claude-code" required maxlength="64" aria-label="Token name">
+      <label class="check"><input type="checkbox" name="write" value="1" checked> Allow changes (apps:write)</label>
+      <button class="btn small">Create token</button>
+    </form>
+  </div>
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <div class="card-head"><div><h2>Change password</h2><p>Your other sessions are signed out; API tokens keep working.</p></div></div>
+    <div class="card-body">
+      <form method="post" action="/account/password" class="stack">
+        <label>Current password <input type="password" name="current" required autocomplete="current-password"></label>
+        <label>New password <small class="hint">At least 10 characters</small>
+          <input type="password" name="password" required minlength="10" maxlength="72" autocomplete="new-password"></label>
+        <label>New password again <input type="password" name="password2" required minlength="10" maxlength="72" autocomplete="new-password"></label>
+        <div><button class="btn small">Change password</button></div>
+      </form>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><div><h2>Change email</h2><p>Now: <strong>{{.User.Email}}</strong>. We send a link to the new address; it changes when you open it.</p></div></div>
+    <div class="card-body">
+      <form method="post" action="/account/email" class="stack">
+        <label>New email <input type="email" name="email" required autocomplete="email"></label>
+        <label>Password <input type="password" name="password" required autocomplete="current-password"></label>
+        <div><button class="btn small">Send the confirmation link</button></div>
+      </form>
+    </div>
+  </section>
+</div>
+
+<section class="card danger-zone">
+  <div class="card-head"><div><h2>Delete my account</h2>
+    <p>Deletes your account and all your apps, their deployments, settings, domains and metrics, right away. This can't be undone.</p></div></div>
+  <div class="card-body">
+    <form method="post" action="/account/delete" class="grid-form">
+      <label>Password <input type="password" name="password" required autocomplete="current-password"></label>
+      <label>Type your email to confirm <input name="confirm" required placeholder="{{.User.Email}}" autocomplete="off"></label>
+      <div><button class="btn danger small">Delete my account and my apps</button></div>
+    </form>
+  </div>
+</section>
+{{end}}

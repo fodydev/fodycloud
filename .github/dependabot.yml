@@ -1,0 +1,22 @@
+# Proposes dependency updates as pull requests. Each update still has to pass
+# scripts/check.sh, whose go-licenses step refuses a Go module whose license
+# isn't allowed; check the license of a new image or action major version by
+# hand (CLAUDE.md, Open-source only). Platform images (var.images) and the
+# Railpack version are updated by hand (they are pinned in several places).
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      go-modules:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly

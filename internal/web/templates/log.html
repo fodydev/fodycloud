@@ -1,0 +1,23 @@
+{{define "partial"}}
+{{$d := .Data.Deployment}}{{$live := active $d.Status}}
+{{/* While the deployment runs, app.js follows the log as a server-sent event
+     stream and suppresses the 2 s polling below, which stays as the fallback. */}}
+<div {{if $live}}hx-get="/apps/{{.Data.App}}/deployments/{{$d.ID}}/log{{if .Data.Full}}?full=1{{end}}" hx-trigger="every 2s" hx-swap="outerHTML"{{end}}>
+  <p><span class="status {{$d.Status}}" data-log-status>{{$d.Status}}</span> {{$d.Kind}}
+    {{with $d.CommitSHA}}· commit <span class="mono">{{short .}}</span>{{end}}
+    {{with $d.DurationSeconds}}· took {{duration .}}{{end}}</p>
+  {{with $d.Error}}<div class="flash err" role="alert">{{.}}
+    <a href="{{$.URL "docs" "/user/logs-and-troubleshooting"}}">How to fix common errors</a></div>{{end}}
+  <div class="logbox" data-log-box>
+    {{template "logbar" (dict "Live" $live "Download" (printf "/apps/%s/deployments/%d/log?raw=1" .Data.App $d.ID))}}
+    <pre class="log{{if .Data.Full}} full{{end}}" data-log="build-{{$d.ID}}"
+      {{- if $live}} data-log-stream="/apps/{{.Data.App}}/deployments/{{$d.ID}}/log/stream?from={{.Data.Offset}}"{{end}}>{{.Data.Log}}</pre>
+    {{template "logjump"}}
+  </div>
+</div>
+{{end}}
+{{define "content"}}
+<div class="breadcrumb"><a href="/apps">Apps</a> / <a href="/apps/{{.Data.App}}">{{.Data.App}}</a> / deployment #{{.Data.Deployment.ID}}</div>
+<div class="page-head"><h1>Deployment #{{.Data.Deployment.ID}}</h1></div>
+<section class="card"><div class="card-body">{{template "partial" .}}</div></section>
+{{end}}

@@ -1,0 +1,22 @@
+{{define "content"}}
+{{$admin := and .Data .Data.Admin}}
+<section class="auth">
+  <div class="auth-head">
+    <img src="/static/brand/emblem.svg" alt="" width="48" height="48">
+    <h1>{{if $admin}}Sign in to the admin panel{{else}}Log in to FodyCloud{{end}}</h1>
+    {{if $admin}}<p class="muted">For FodyCloud admins. Students: use the <a href="{{.URL "dashboard" "/login"}}">dashboard</a>.</p>{{end}}
+  </div>
+  <div class="card"><div class="card-body">
+    <form method="post" action="/login" class="stack">
+      <label>Email <input type="email" name="email" required autocomplete="email" autofocus></label>
+      <label>Password <input type="password" name="password" required autocomplete="current-password"></label>
+      <button class="btn block">{{if $admin}}Sign in{{else}}Log in{{end}}</button>
+    </form>
+  </div></div>
+  {{if $admin}}
+  <p class="muted center"><a href="{{.URL "dashboard" "/forgot"}}">Forgot your password?</a></p>
+  {{else}}
+  <p class="muted center">No account? <a href="/signup">Sign up</a> · <a href="/forgot">Forgot your password?</a></p>
+  {{end}}
+</section>
+{{end}}

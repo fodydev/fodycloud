@@ -1,0 +1,27 @@
+{{define "content"}}
+{{$p := .Data.Page}}
+<div class="docs">
+  <nav class="docs-nav" aria-label="Documentation">
+    <details open data-docs-menu>
+      <summary>{{.Data.Title}} menu</summary>
+      {{if eq .Data.Title "Documentation"}}<a class="docs-home{{if eq $p.Slug ""}} current{{end}}" href="{{.Data.Home}}" {{if eq $p.Slug ""}}aria-current="page"{{end}}>Documentation home</a>{{end}}
+      {{range .Data.Nav}}
+        <p class="docs-nav-title">{{.Title}}</p>
+        <ul>
+          {{range .Pages}}<li><a href="{{call $.Data.Href .Slug}}" {{if eq .Slug $p.Slug}}class="current" aria-current="page"{{end}}>{{.Title}}</a></li>{{end}}
+        </ul>
+      {{end}}
+    </details>
+  </nav>
+  <article class="docs-body">
+    {{with $p.Section}}<p class="docs-section">{{.}}</p>{{end}}
+    <div class="prose">{{$p.HTML}}</div>
+    {{if or $p.Prev $p.Next}}
+    <nav class="docs-pager" aria-label="Previous and next page">
+      {{with $p.Prev}}<a class="prev" href="{{call $.Data.Href .Slug}}"><small>Previous</small>{{.Title}}</a>{{else}}<span></span>{{end}}
+      {{with $p.Next}}<a class="next" href="{{call $.Data.Href .Slug}}"><small>Next</small>{{.Title}}</a>{{end}}
+    </nav>
+    {{end}}
+  </article>
+</div>
+{{end}}

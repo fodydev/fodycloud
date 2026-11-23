@@ -1,0 +1,18 @@
+{{define "head"}}{{if eq .Data.Status "waking"}}<meta http-equiv="refresh" content="3">{{end}}{{end}}
+{{define "content"}}
+<section class="status-page">
+  <img src="/static/brand/emblem.svg" alt="" width="72" height="72">
+  {{if eq .Data.Status "waking"}}
+    <h1>Waking up {{.Data.App}}…</h1>
+    <p>This app was sleeping to save resources. It will be ready in a few seconds.</p>
+    <p class="muted">This page refreshes automatically.</p>
+  {{else if eq .Data.Status ""}}
+    <h1>No app here</h1>
+    <p><code>{{.Data.App}}.apps.{{.BaseDomain}}</code> is not deployed on FodyCloud.</p>
+    <p><a class="btn" href="https://dashboard.{{.BaseDomain}}/">Deploy your own app</a></p>
+  {{else}}
+    <h1>{{.Data.App}} is offline</h1>
+    <p>Its owner stopped it, or its last deployment failed.</p>
+  {{end}}
+</section>
+{{end}}

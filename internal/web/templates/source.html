@@ -1,0 +1,31 @@
+{{define "content"}}
+<div class="page-head"><div>
+  <h1>Source code</h1>
+  <p>FodyCloud is free software: you can use, study, change and share it under the terms of the
+    <a href="https://www.gnu.org/licenses/agpl-3.0.html">GNU Affero General Public License</a>,
+    version 3 or later.</p>
+</div></div>
+<div class="grid-2">
+  <section class="card">
+    <div class="card-head"><h2>This platform's version</h2></div>
+    <div class="card-body stack">
+      <p>This platform runs FodyCloud version <code>{{.Data.Version}}</code>.</p>
+      {{if .Data.Size}}
+        <p>Download the exact source code it was built from, including any changes made by its operator:</p>
+        <p><a class="btn" href="{{.URL "home" "/source.tar.gz"}}" download>Download the source</a>
+          <span class="muted">.tar.gz, {{bytes .Data.Size}}</span></p>
+      {{else}}
+        <p class="muted">No source archive is available for this version: it is a development build.
+          Use the repository instead.</p>
+      {{end}}
+    </div>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>Repository</h2></div>
+    <div class="card-body stack">
+      <p>Development happens in the public repository, with the full history, issues and contribution guide:</p>
+      <p><a href="{{.Data.Repository}}">{{.Data.Repository}}</a></p>
+    </div>
+  </section>
+</div>
+{{end}}

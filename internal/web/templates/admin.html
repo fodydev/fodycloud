@@ -1,0 +1,136 @@
+{{define "content"}}
+<div class="page-head">
+  <div><h1>Admin panel</h1><p>Plans, abuse and users. Every change is audited and applied to running apps immediately. <a href="/docs">Admin guide</a></p></div>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <div class="card-head"><div><h2>Assign a plan</h2><p>No online payment yet: record the reference in the note.</p></div></div>
+    <div class="card-body">
+      <form method="post" action="/plan" class="grid-form">
+        <label>User email <input type="email" name="email" required list="emails"></label>
+        <label>Plan <select name="plan">{{range .Data.Plans}}<option>{{.}}</option>{{end}}</select></label>
+        <label>Valid until <small class="hint">Empty = no expiry</small><input type="date" name="valid_until"></label>
+        <label>Note <input name="note" placeholder="e.g. paid by mobile money, ref …"></label>
+        <div><button class="btn">Save plan</button></div>
+      </form>
+      <datalist id="emails">{{range .Data.Users}}<option value="{{.Email}}">{{end}}</datalist>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Suspend or reinstate</h2></div>
+    <div class="card-body">
+      <form method="post" action="/ban" class="stack">
+        <label>User email <input type="email" name="email" required list="emails"></label>
+        <label>Reason <small class="hint">Sent to the user</small><input name="reason" required></label>
+        <div><button class="btn small danger">Suspend user</button></div>
+      </form>
+      <form method="post" action="/unban" class="inline-form">
+        <input type="email" name="email" placeholder="user email" required list="emails" aria-label="User email">
+        <button class="btn small ghost">Reinstate</button>
+      </form>
+    </div>
+  </section>
+</div>
+
+<section class="card">
+  <div class="card-head"><div><h2>Storage and databases</h2><p>Apps' persistent volumes, PostgreSQL databases and Valkey caches (sizes measured every 10 minutes).</p></div></div>
+  <div class="table-wrap">
+    <table class="list">
+      <thead><tr><th>Kind</th><th>Apps</th><th>Used</th><th>Full (read-only)</th><th>Blocked</th></tr></thead>
+      <tbody>
+      {{range .Data.Storage}}<tr><td>{{.Kind}}</td><td>{{.Count}}</td><td>{{if eq .Kind "valkey"}}—{{else}}{{bytes .UsedBytes}}{{end}}</td><td>{{.ReadOnly}}</td><td>{{.Blocked}}</td></tr>
+      {{else}}<tr><td class="muted" colspan="5">No app uses storage yet.</td></tr>{{end}}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head"><div><h2>Abuse flags</h2><p>Apps that ran at their CPU limit for a long time.</p></div></div>
+  <div class="table-wrap">
+    <table class="list">
+      <thead><tr><th>When</th><th>App</th><th>Owner</th><th>Kind</th><th>Detail</th><th>Action</th><th></th></tr></thead>
+      <tbody>
+      {{range .Data.Flags}}
+        <tr><td>{{date .CreatedAt}}</td><td class="mono">{{.App}}</td><td>{{.Email}}</td><td>{{.Kind}}</td><td>{{.Detail}}</td><td>{{.Action}}</td>
+          <td><form method="post" action="/abuse/resolve"><input type="hidden" name="id" value="{{.ID}}"><button class="link">Resolve</button></form></td></tr>
+      {{else}}<tr><td class="muted" colspan="7">No open flags.</td></tr>{{end}}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>Banned repositories</h2></div>
+  <div class="card-body">
+    <form method="post" action="/repos/ban" class="inline-form">
+      <input type="url" name="repo_url" placeholder="https://github.com/owner/repo" required aria-label="Repository URL">
+      <input name="reason" placeholder="Reason" aria-label="Reason">
+      <button class="btn small danger">Ban repository</button>
+    </form>
+  </div>
+  <div class="table-wrap">
+    <table class="list">
+      <tbody>
+      {{range .Data.Repos}}
+        <tr><td class="mono">{{.RepoURL}}</td><td>{{.Reason}}</td><td>{{date .CreatedAt}}</td>
+          <td><form method="post" action="/repos/unban"><input type="hidden" name="repo_url" value="{{.RepoURL}}"><button class="link">Allow again</button></form></td></tr>
+      {{else}}<tr><td class="muted">No banned repositories.</td></tr>{{end}}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head"><div><h2>Admin API tokens</h2><p>For scripts that use the <a href="/docs/api">admin API</a>. They only work on <code>/v1/admin</code>.</p></div></div>
+  <div class="card-body">
+    {{with .Data.NewToken}}
+      <div class="flash ok" role="status"><strong>New admin token — copy it now, it won't be shown again:</strong><pre class="log">{{.}}</pre></div>
+    {{end}}
+    <form method="post" action="/tokens" class="inline-form">
+      <input name="name" placeholder="Token name, e.g. payments-sync" required maxlength="64" aria-label="Token name">
+      <button class="btn small">Create admin token</button>
+    </form>
+  </div>
+  <div class="table-wrap">
+    <table class="list">
+      <thead><tr><th>Name</th><th>Token</th><th>Created</th><th>Last used</th><th></th></tr></thead>
+      <tbody>
+      {{range .Data.Tokens}}
+        <tr><td>{{.Name}}</td><td class="mono">{{.Prefix}}…</td><td>{{date .CreatedAt}}</td><td>{{date .LastUsedAt}}</td>
+          <td><form method="post" action="/tokens/{{.ID}}/revoke"><button class="link danger">Revoke</button></form></td></tr>
+      {{else}}<tr><td class="muted" colspan="5">No admin tokens.</td></tr>{{end}}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>Users</h2></div>
+  <div class="table-wrap">
+    <table class="list">
+      <thead><tr><th>Email</th><th>Plan</th><th>Valid until</th><th>Apps</th><th>Joined</th></tr></thead>
+      <tbody>
+      {{range .Data.Users}}
+        <tr><td>{{.Email}}{{if .Banned}} <span class="status failed">suspended</span>{{end}}{{if not .Verified}} <span class="pill">unverified</span>{{end}}</td>
+          <td>{{.Plan}}</td><td>{{date .ValidUntil}}</td><td>{{.Apps}}</td><td>{{date .CreatedAt}}</td></tr>
+      {{end}}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head"><div><h2>Admins</h2><p>Admin accounts are added and removed by the platform's operator with the admin CLI.</p></div></div>
+  <div class="table-wrap">
+    <table class="list">
+      <thead><tr><th>Email</th><th>Admin since</th></tr></thead>
+      <tbody>
+      {{range .Data.Admins}}<tr><td>{{.Email}}{{if eq .Email $.Admin.Email}} <span class="pill">you</span>{{end}}</td><td>{{date .CreatedAt}}</td></tr>{{end}}
+      </tbody>
+    </table>
+  </div>
+</section>
+{{end}}

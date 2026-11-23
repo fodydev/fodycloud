@@ -1,0 +1,240 @@
+# FodyCloud platform stack (managed by Terraform — edit terraform/files/compose.yaml).
+# Docker Compose is used only for the platform's own services; student apps are
+# started individually by the control plane on the external `fodycloud-apps` network.
+name: fodycloud
+
+x-hardening: &hardening
+  restart: unless-stopped
+  security_opt:
+    - no-new-privileges:true
+  logging:
+    driver: local
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  socket-proxy:
+    <<: *hardening
+    image: ${SOCKET_PROXY_IMAGE}
+    environment:
+      # Read-only access to what Traefik needs; every write endpoint is denied.
+      CONTAINERS: 1
+      NETWORKS: 1
+      EVENTS: 1
+      PING: 1
+      VERSION: 1
+      INFO: 0
+      IMAGES: 0
+      SERVICES: 0
+      TASKS: 0
+      POST: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - socket
+    mem_limit: 128m
+    cpus: 0.25
+
+  traefik:
+    <<: *hardening
+    image: ${TRAEFIK_IMAGE}
+    depends_on:
+      - socket-proxy
+    ports:
+      - "80:80/tcp"
+      - "443:443/tcp"
+      - "443:443/udp"
+    env_file:
+      - ./traefik/dns.env
+    environment:
+      # Extra root for a private ACME CA (empty = public CAs only).
+      LEGO_CA_CERTIFICATES: ${ACME_CA_CERTS}
+    volumes:
+      - ./traefik/acme-ca.pem:/etc/traefik/acme-ca.pem:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+      - acme:/acme
+    networks:
+      socket: {}
+      edge: {}
+      apps:
+        ipv4_address: ${TRAEFIK_APPS_IP}
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    mem_limit: 1g
+    cpus: 1.0
+
+  postgres:
+    <<: *hardening
+    image: ${POSTGRES_IMAGE}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - platform
+    shm_size: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 2g
+    cpus: 2.0
+
+  # Valkey: BSD-licensed, Redis-compatible key-value store (Redis 7.4+ is not open source).
+  valkey:
+    <<: *hardening
+    image: ${VALKEY_IMAGE}
+    command: ["valkey-server", "--requirepass", "${VALKEY_PASSWORD}", "--appendonly", "yes", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    environment:
+      # Lets valkey-cli (healthcheck, admin shells) authenticate. valkey-cli
+      # reads REDISCLI_AUTH for compatibility; VALKEYCLI_AUTH for newer releases.
+      REDISCLI_AUTH: ${VALKEY_PASSWORD}
+      VALKEYCLI_AUTH: ${VALKEY_PASSWORD}
+    volumes:
+      - valkeydata:/data
+    networks:
+      - platform
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 768m
+    cpus: 0.5
+
+  # The students' PostgreSQL databases (not the platform's own database): one
+  # database and one role per app, created by the control plane. Apps reach it
+  # on fodycloud-apps at APPS_DB_IP (a firewall exception allows only port
+  # 5432); pg_hba lets each role open only the database of the same name, and
+  # the superuser only from the control plane's appsdb network.
+  apps-postgres:
+    <<: *hardening
+    image: ${POSTGRES_IMAGE}
+    command: ["postgres", "-c", "hba_file=/etc/postgresql/pg_hba.conf", "-c", "max_connections=300",
+              "-c", "password_encryption=scram-sha-256"]
+    environment:
+      POSTGRES_USER: fcadmin
+      POSTGRES_DB: fcadmin
+      POSTGRES_PASSWORD: ${APPS_POSTGRES_PASSWORD}
+    volumes:
+      - appspgdata:/var/lib/postgresql/data
+      - ./config/apps-pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+    networks:
+      appsdb: {}
+      apps:
+        ipv4_address: ${APPS_DB_IP}
+    shm_size: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fcadmin -d fcadmin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: ${APPS_DB_MEMORY}
+    cpus: 1.0
+
+  # FodyCloud control plane: dashboard, REST API (/api/v1), MCP server (/mcp),
+  # build/deploy worker. Built on the server from the source shipped by Terraform.
+  # It drives the host Docker daemon (root-equivalent): it is the only trusted
+  # component allowed to do so; student code never gets the socket.
+  control-plane:
+    <<: *hardening
+    image: fodycloud/control-plane:local
+    build:
+      context: ./src
+      args:
+        VERSION: ${CONTROL_PLANE_VERSION}
+    pull_policy: build
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      FC_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+      FC_BASE_DOMAIN: ${BASE_DOMAIN}
+      FC_PUBLIC_IP: ${PUBLIC_IP}
+      FC_APPS_CERT_RESOLVER: ${TLS_RESOLVER}
+      FC_CUSTOM_CERT_RESOLVER: ${CUSTOM_DOMAIN_RESOLVER}
+      FC_DISK_QUOTA: ${DISK_QUOTA}
+      FC_BUILD_CONCURRENCY: ${BUILD_CONCURRENCY}
+      FC_BUILDER_CPUS: ${BUILDER_CPUS}
+      FC_PROBE_IMAGE: ${PROBE_IMAGE}
+      FC_VALKEY_IMAGE: ${VALKEY_IMAGE}
+      FC_APPS_DB_URL: postgres://fcadmin:${APPS_POSTGRES_PASSWORD}@apps-postgres:5432/fcadmin?sslmode=disable
+      FC_APPS_DB_HOST: ${APPS_DB_IP}
+      FC_BUILDER_MEMORY: ${BUILDER_MEMORY}
+      FC_ADMIN_EMAIL: ${ADMIN_EMAIL}
+      FC_SMTP_HOST: ${SMTP_HOST}
+      FC_SMTP_PORT: ${SMTP_PORT}
+      FC_SMTP_USERNAME: ${SMTP_USERNAME}
+      FC_SMTP_PASSWORD: ${SMTP_PASSWORD}
+      FC_MAIL_FROM: ${MAIL_FROM}
+      FC_ABUSE_CPU_MINUTES: ${ABUSE_CPU_MINUTES}
+      FC_SIGNUP_LIMIT_PER_HOUR: ${SIGNUP_LIMIT_PER_HOUR}
+      FC_ABANDON_GRACE_DAYS: ${ABANDON_GRACE_DAYS}
+      FC_ABANDON_CHECK_INTERVAL: ${ABANDON_CHECK_INTERVAL}
+      FC_OPERATOR_NAME: ${OPERATOR_NAME}
+      FC_OPERATOR_COUNTRY: ${OPERATOR_COUNTRY}
+      FC_OPERATOR_EMAIL: ${OPERATOR_EMAIL}
+      FC_OPERATOR_DATA_LOCATION: ${OPERATOR_DATA_LOCATION}
+      FC_SOURCE_URL: ${SOURCE_URL}
+      FC_PLANS_FILE: /etc/fodycloud/plans.json
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config/plans.json:/etc/fodycloud/plans.json:ro
+      - controlplane-work:/var/lib/fodycloud
+      - controlplane-docker:/root/.docker # buildx builder definition
+    networks:
+      - edge
+      - platform
+      - appsdb
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: fodycloud-edge
+      traefik.http.routers.control-plane.rule: Host(`${BASE_DOMAIN}`) || Host(`dashboard.${BASE_DOMAIN}`) || Host(`admin.${BASE_DOMAIN}`) || Host(`api.${BASE_DOMAIN}`) || Host(`mcp.${BASE_DOMAIN}`)
+      traefik.http.routers.control-plane.entrypoints: websecure
+      traefik.http.routers.control-plane.tls: "true"
+      traefik.http.routers.control-plane.tls.certresolver: ${TLS_RESOLVER}
+      traefik.http.routers.control-plane.middlewares: security-headers@file
+      traefik.http.services.control-plane.loadbalancer.server.port: "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    mem_limit: 1g
+    cpus: 1.0
+
+networks:
+  socket:
+    internal: true
+  platform:
+    internal: true
+  # The control plane's link to apps-postgres (fixed subnet: pg_hba trusts the
+  # superuser only from it).
+  appsdb:
+    internal: true
+    ipam:
+      config:
+        - subnet: ${APPSDB_SUBNET}
+  edge:
+    external: true
+    name: fodycloud-edge
+  apps:
+    external: true
+    name: fodycloud-apps
+
+volumes:
+  acme:
+  pgdata:
+  appspgdata:
+  valkeydata:
+  controlplane-work:
+  controlplane-docker:

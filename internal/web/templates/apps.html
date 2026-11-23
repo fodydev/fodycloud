@@ -1,0 +1,56 @@
+{{define "content"}}
+<div class="page-head">
+  <div>
+    <h1>Apps</h1>
+    <p>Deploy public repositories from GitHub, GitLab or Codeberg.</p>
+  </div>
+  {{with .Data.Plan}}<span class="pill">{{.Plan}} plan · {{.AppsUsed}} of {{.Limits.MaxApps}} apps</span>{{end}}
+</div>
+
+<section class="card">
+  {{if .Data.Apps}}
+  <div class="table-wrap">
+    <table class="list">
+      <thead><tr><th>App</th><th>Status</th><th>URL</th><th>Repository</th></tr></thead>
+      <tbody>
+      {{range .Data.Apps}}
+        <tr>
+          <td><a class="app-name" href="/apps/{{.Name}}">{{.Name}}</a></td>
+          <td><span class="status {{.Status}}">{{.Status}}</span></td>
+          <td><a href="{{.URL}}" target="_blank" rel="noopener">{{.URL}}</a></td>
+          <td class="muted mono">{{.RepoURL}} · {{.Branch}}</td>
+        </tr>
+      {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{else}}
+  <div class="card-body">
+    <p class="muted">No apps yet. Deploy your first one below: it only takes a public repository URL.</p>
+  </div>
+  {{end}}
+</section>
+
+<section class="card" id="new">
+  <div class="card-head"><div><h2>New app</h2><p>FodyCloud analyses the repository and shows you the detected language and framework; you confirm or change it before the first deploy.</p></div></div>
+  <div class="card-body">
+    <form method="post" action="/apps" class="stack">
+      <div class="grid-form">
+        <label>Name <input name="name" required pattern="[a-z][a-z0-9-]{1,30}[a-z0-9]" placeholder="my-portfolio">
+          <small class="hint">Becomes <code>&lt;name&gt;.apps.{{.BaseDomain}}</code></small></label>
+        <label>Public repository URL <input name="repo_url" type="url" required placeholder="https://github.com/you/project">
+          <small class="hint">GitHub, GitLab or Codeberg; public only.</small></label>
+        <label>Branch <input name="branch" value="main" required></label>
+        <label>Working directory <input name="root_dir" maxlength="200" placeholder="(repository root)" pattern="[A-Za-z0-9._/\-]*">
+          <small class="hint">Optional. The app's folder in the repository, e.g. <code>frontend</code>. Left empty, FodyCloud also looks in subfolders.</small></label>
+      </div>
+
+
+      <label>Environment variables <small class="hint">Optional. One <code>KEY=value</code> per line; available while building and at runtime.</small>
+        <textarea name="env" rows="4" spellcheck="false" placeholder="DATABASE_URL=...&#10;SECRET_KEY=..."></textarea></label>
+
+      <div><button class="btn">Analyse repository</button></div>
+    </form>
+  </div>
+</section>
+{{end}}

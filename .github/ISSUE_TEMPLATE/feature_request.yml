@@ -1,0 +1,28 @@
+name: Feature request
+description: Suggest an improvement to FodyCloud.
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the existing issues first. For a new language or framework, use the **Stack request** form instead.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do, and why is it hard today? Who has this need (students, teachers, platform operators, the FodyCloud team)?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Your proposal
+      description: How it could work in the dashboard, the API or the MCP server. Mention any security or resource-usage impact you can think of.
+    validations:
+      required: true
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contributing
+      options:
+        - label: I'd like to work on this myself.
