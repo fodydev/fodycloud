@@ -56,14 +56,19 @@ go_licenses() {
 
 # tool NAME IMAGE ARGS…: runs NAME from a local binary, else from its pinned
 # container image (Docker or Podman) with the repository mounted read-only.
+# The container's user may not own the checkout (on GitHub runners it doesn't),
+# so git there would refuse the repository as "dubious ownership" and tools like
+# reuse would stop honouring .gitignore (and lint terraform/.terraform/, etc.):
+# mark /mnt as a safe directory.
 tool() {
   local name="$1" image="$2"; shift 2
+  local git_safe=(-e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/mnt)
   if command -v "$name" >/dev/null; then
     "$name" "$@"
   elif command -v docker >/dev/null; then
-    docker run --rm -v "$PWD:/mnt:ro" -w /mnt "$image" "$@"
+    docker run --rm "${git_safe[@]}" -v "$PWD:/mnt:ro" -w /mnt "$image" "$@"
   elif command -v podman >/dev/null; then
-    podman run --rm -v "$PWD:/mnt:ro,Z" -w /mnt "$image" "$@"
+    podman run --rm "${git_safe[@]}" -v "$PWD:/mnt:ro,Z" -w /mnt "$image" "$@"
   else
     echo "$name not found: install it, or Docker/Podman to run $image"
     return 1
