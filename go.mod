@@ -5,7 +5,7 @@ go 1.27.4
 require (
 	github.com/jackc/pgx/v5 v5.13.0
 	github.com/modelcontextprotocol/go-sdk v1.8.0
-	github.com/yuin/goldmark v1.7.13
+	github.com/yuin/goldmark v1.8.7
 	golang.org/x/crypto v0.59.0
 )
 
