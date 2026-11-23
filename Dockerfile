@@ -19,7 +19,7 @@ RUN tar -czf /fodycloud-source.tar.gz -C /source "fodycloud-${VERSION}"
 
 # Runtime: docker CLI + buildx plugin (to build and run student apps through the
 # host daemon), git (clone public repositories) and the Railpack CLI (planning).
-FROM docker:29.9.3-cli
+FROM docker:29.10.0-cli
 ARG RAILPACK_VERSION=0.43.0
 ARG RAILPACK_SHA256=248a8f60f36854aabed6124113631078a802de3461660855fc4de9c26065c1fb
 RUN apk add --no-cache git ca-certificates tzdata \
