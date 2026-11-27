@@ -4,6 +4,9 @@ This page covers your password, your email address, access tokens, deleting your
 what happens if your account is suspended. Everything is on the dashboard's **Account & API**
 page.
 
+If this platform offers it, you can also log in with your GitHub, GitLab or Codeberg account: see
+[Log in with GitHub, GitLab or Codeberg](sign-in-with-a-forge.md).
+
 ## Confirm your email address
 
 After you sign up, FodyCloud sends an email titled **Confirm your FodyCloud email**. Select the
@@ -37,7 +40,9 @@ If you receive that email without having changed your password, reset it right a
 ## Change your email address
 
 1. On the **Account & API** page, find **Change email**.
-2. Enter the new address and your password, then select **Send the confirmation link**.
+2. Enter the new address and your password, then select **Send the confirmation link**. If your
+   account has no password (you signed up with GitHub, GitLab or Codeberg), there is no password
+   field: log in again first if your last login was more than 15 minutes ago.
 3. Open the email titled **Confirm your new FodyCloud email**, sent to the new address, and select
    the link. It works once, for one hour.
 
@@ -53,7 +58,8 @@ settings, environment variables, domains and metrics. **It can't be undone.** Yo
 aren't affected.
 
 1. On the **Account & API** page, find **Delete my account**.
-2. Enter your password, and type your email address to confirm.
+2. Enter your password, and type your email address to confirm. An account without a password
+   has no password field, but needs a login within the last 15 minutes.
 3. Select **Delete my account and my apps**.
 
 You receive an email confirming the deletion. Encrypted backups of the platform age out within

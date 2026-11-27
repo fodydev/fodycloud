@@ -522,3 +522,67 @@ variable "source_url" {
     error_message = "source_url must be an https:// URL."
   }
 }
+
+# ---------------------------------------------------------------------------
+# Sign-in with a forge (optional). Each provider is off until you register an
+# OAuth app on it and set its client ID and secret here. Students can always
+# log in with email and password; remove a block to turn a provider off.
+# Callback URL to register: https://dashboard.<base_domain>/auth/<github|gitlab|codeberg>/callback
+# ---------------------------------------------------------------------------
+
+variable "oauth_github" {
+  description = "GitHub OAuth app (github.com > Settings > Developer settings > OAuth Apps). null = no \"Continue with GitHub\"."
+  type = object({
+    client_id     = string
+    client_secret = string
+  })
+  default   = null
+  sensitive = true
+
+  validation {
+    condition     = var.oauth_github == null || (can(regex("^[^\\s\"']+$", try(var.oauth_github.client_id, ""))) && can(regex("^[^\\s\"']+$", try(var.oauth_github.client_secret, ""))))
+    error_message = "oauth_github needs both client_id and client_secret (no spaces or quotes), or null."
+  }
+}
+
+variable "oauth_gitlab" {
+  description = "GitLab OAuth application (scope read_user). url: the instance, default https://gitlab.com; label: the button's name, default \"GitLab\". null = no \"Continue with GitLab\"."
+  type = object({
+    client_id     = string
+    client_secret = string
+    url           = optional(string, "")
+    label         = optional(string, "")
+  })
+  default   = null
+  sensitive = true
+
+  validation {
+    condition = var.oauth_gitlab == null || (
+      can(regex("^[^\\s\"']+$", try(var.oauth_gitlab.client_id, ""))) && can(regex("^[^\\s\"']+$", try(var.oauth_gitlab.client_secret, ""))) &&
+      can(regex("^(https://[^\\s\"/?#]+(/[^\\s\"?#]*)?)?$", try(var.oauth_gitlab.url, ""))) &&
+      can(regex("^[^\"\\n]{0,40}$", try(var.oauth_gitlab.label, "")))
+    )
+    error_message = "oauth_gitlab needs client_id and client_secret (no spaces or quotes); url must be empty or an https:// URL, label at most 40 characters without quotes."
+  }
+}
+
+variable "oauth_codeberg" {
+  description = "Codeberg (or another Forgejo/Gitea) OAuth2 application. url: the instance, default https://codeberg.org; label: the button's name, default \"Codeberg\". null = no \"Continue with Codeberg\"."
+  type = object({
+    client_id     = string
+    client_secret = string
+    url           = optional(string, "")
+    label         = optional(string, "")
+  })
+  default   = null
+  sensitive = true
+
+  validation {
+    condition = var.oauth_codeberg == null || (
+      can(regex("^[^\\s\"']+$", try(var.oauth_codeberg.client_id, ""))) && can(regex("^[^\\s\"']+$", try(var.oauth_codeberg.client_secret, ""))) &&
+      can(regex("^(https://[^\\s\"/?#]+(/[^\\s\"?#]*)?)?$", try(var.oauth_codeberg.url, ""))) &&
+      can(regex("^[^\"\\n]{0,40}$", try(var.oauth_codeberg.label, "")))
+    )
+    error_message = "oauth_codeberg needs client_id and client_secret (no spaces or quotes); url must be empty or an https:// URL, label at most 40 characters without quotes."
+  }
+}

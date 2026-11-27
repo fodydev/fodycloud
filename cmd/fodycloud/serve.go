@@ -15,6 +15,7 @@ import (
 	"github.com/fodydev/fodycloud/internal/builder"
 	"github.com/fodydev/fodycloud/internal/mcpserver"
 	"github.com/fodydev/fodycloud/internal/monitor"
+	"github.com/fodydev/fodycloud/internal/oauth"
 	"github.com/fodydev/fodycloud/internal/ratelimit"
 	"github.com/fodydev/fodycloud/internal/sites"
 	"github.com/fodydev/fodycloud/internal/web"
@@ -54,7 +55,14 @@ func serve(ctx context.Context, log *slog.Logger) error {
 		sourcePage := sites.For(a.cfg.BaseDomain).URL(sites.Home, "/source")
 		apiH := &api.API{Svc: a.svc, Auth: a.auth, Log: log, TokenLimiter: tokenLimiter, About: api.About{
 			Name: "FodyCloud", Version: Version, License: "AGPL-3.0-or-later", Source: sourcePage, Repository: a.cfg.SourceURL}}
-		webH := &web.Web{Svc: a.svc, Auth: a.auth, API: apiH, Log: log, BaseDomain: a.cfg.BaseDomain, SecureCookies: a.cfg.SecureCookies,
+		forges, err := oauth.NewRegistry(a.cfg.OAuth)
+		if err != nil {
+			return err
+		}
+		for _, p := range forges.List() {
+			log.Info("sign-in with a forge enabled", "provider", p.Name, "issuer", p.Issuer)
+		}
+		webH := &web.Web{Svc: a.svc, Auth: a.auth, API: apiH, Forges: forges, Log: log, BaseDomain: a.cfg.BaseDomain, SecureCookies: a.cfg.SecureCookies,
 			Operator: a.cfg.Operator, Version: Version, SourceURL: a.cfg.SourceURL, SourceArchive: a.cfg.SourceArchive,
 			LoginLimiter: ratelimit.New(10, time.Minute), SignupLimiter: ratelimit.New(a.cfg.SignupPerHour, time.Hour),
 			WakeLimiter: ratelimit.New(30, time.Minute), Lockout: ratelimit.NewLockout(5, 15*time.Minute)}

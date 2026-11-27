@@ -23,8 +23,9 @@ func TestMessage(t *testing.T) {
 
 func TestTemplatesRender(t *testing.T) {
 	data := map[string]any{"URL": "https://x/verify?t=1", "Plan": "student", "When": "in 7 days", "Until": "2027-01-01",
-		"Reason": "spam", "App": "blog", "Subject": "s", "Body": "b"}
-	for _, name := range []string{"verify", "reset", "plan-expiring", "plan-expired", "banned", "app-stopped-abuse", "admin-alert"} {
+		"Reason": "spam", "App": "blog", "Subject": "s", "Body": "b", "Provider": "GitHub", "Username": "octocat"}
+	for _, name := range []string{"verify", "reset", "plan-expiring", "plan-expired", "banned", "app-stopped-abuse", "admin-alert",
+		"forge-connected", "forge-disconnected"} {
 		var sb strings.Builder
 		if err := templates.ExecuteTemplate(&sb, name, data); err != nil {
 			t.Fatalf("%s: %v", name, err)

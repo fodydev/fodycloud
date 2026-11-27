@@ -53,6 +53,9 @@ type User struct {
 	EmailVerified bool
 	// Scopes granted to the current credential. Browser sessions get all scopes.
 	Scopes []string
+	// SignedInAt is when the browser session started (zero for API tokens):
+	// students without a password prove a recent sign-in instead.
+	SignedInAt time.Time
 }
 
 // Can reports whether the current credential has the scope.
@@ -201,9 +204,9 @@ func (s *Store) SessionUser(ctx context.Context, token string) (*User, error) {
 		return nil, ErrUnauthenticated
 	}
 	var u User
-	err := s.DB.QueryRow(ctx, `SELECT u.id, u.email, u.email_verified_at IS NOT NULL FROM sessions s JOIN users u ON u.id=s.user_id
+	err := s.DB.QueryRow(ctx, `SELECT u.id, u.email, u.email_verified_at IS NOT NULL, s.created_at FROM sessions s JOIN users u ON u.id=s.user_id
 		WHERE s.token_hash=$1 AND s.expires_at > now() AND u.banned_at IS NULL`,
-		Hash(token)).Scan(&u.ID, &u.Email, &u.EmailVerified)
+		Hash(token)).Scan(&u.ID, &u.Email, &u.EmailVerified, &u.SignedInAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrUnauthenticated
 	}

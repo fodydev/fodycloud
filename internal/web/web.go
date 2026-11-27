@@ -18,6 +18,7 @@ import (
 	"github.com/fodydev/fodycloud/internal/api"
 	"github.com/fodydev/fodycloud/internal/auth"
 	"github.com/fodydev/fodycloud/internal/config"
+	"github.com/fodydev/fodycloud/internal/oauth"
 	"github.com/fodydev/fodycloud/internal/ratelimit"
 	"github.com/fodydev/fodycloud/internal/service"
 	"github.com/fodydev/fodycloud/internal/sites"
@@ -53,6 +54,9 @@ type Web struct {
 	SignupLimiter *ratelimit.Limiter // per client IP (also used for password-reset requests)
 	WakeLimiter   *ratelimit.Limiter // per client IP
 	Lockout       *ratelimit.Lockout // per account, after failed logins
+
+	// Forges students can sign in with (nil or empty: email and password only).
+	Forges *oauth.Registry
 }
 
 // limited applies an optional per-IP limiter; it writes a 429 when refused.
@@ -158,6 +162,8 @@ type page struct {
 	// Site is the site serving the page ("admin" switches the menu).
 	Site  string
 	sites sites.Sites
+	// Forges students can log in with (dashboard site only).
+	Forges []*oauth.Provider
 }
 
 // URL is the absolute address of a path on a site, for links between the
@@ -183,8 +189,11 @@ func (w *Web) render(rw http.ResponseWriter, r *http.Request, name, title string
 func (w *Web) renderPage(rw http.ResponseWriter, r *http.Request, name, title string, u *auth.User, ad *auth.Admin, data any) {
 	p := page{Admin: ad, Title: title, User: u, BaseDomain: w.BaseDomain, OK: r.URL.Query().Get("ok"), Err: r.URL.Query().Get("error"), Data: data,
 		NeedsVerification: u != nil && !u.EmailVerified && w.Svc != nil && w.Svc.RequireVerification, Nav: name, sites: w.sites}
-	if w.sites.Of(r.Host) == sites.Admin {
+	switch w.sites.Of(r.Host) {
+	case sites.Admin:
 		p.Site = "admin"
+	case sites.Dashboard:
+		p.Forges = w.Forges.List()
 	}
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
 	tmpl := w.pages[name]

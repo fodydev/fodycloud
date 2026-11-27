@@ -26,7 +26,7 @@ What happens immediately:
 
 - all the user's apps are stopped;
 - the user is signed out everywhere and all their API tokens are revoked;
-- the user can no longer sign in;
+- the user can no longer sign in, with a password or with GitHub, GitLab or Codeberg;
 - the user receives an email titled **Your FodyCloud account has been suspended**, with your
   reason.
 

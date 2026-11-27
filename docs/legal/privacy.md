@@ -13,6 +13,7 @@ FodyCloud at `fodycloud.example`, why, how long we keep it, and your rights. Con
 | Your email address | Your account: sign-in, confirmation and password-reset emails, notices about your apps and plan. |
 | Your password, **only as a one-way hash** (bcrypt) | Checking your password at sign-in. We can't read it. |
 | Session cookies and API tokens, stored as hashes | Keeping you signed in; letting your scripts and assistants act for you. |
+| If you log in with GitHub, GitLab or Codeberg (when this platform offers it): that account's ID, username and verified email address | Letting you log in with that account. We don't keep that site's access key and don't access your repositories or other data there. |
 | Your apps: repository address, settings, environment variables, build logs, runtime logs | Building and running your apps, and showing you their logs. |
 | What your apps store in their persistent volume, database and cache (it may include personal data of your app's users) | Running your apps and backing up their data. You are responsible for that data; we process it only for you. |
 | Your apps' metrics: CPU, memory, number of requests | Showing them to you, enforcing plan limits, detecting abuse. |
@@ -27,15 +28,17 @@ inform them and protect it.
 
 ## Cookies
 
-The platform uses only cookies needed to work: a session cookie that keeps you signed in, and a
-cookie that tells the home page you are signed in. There are no analytics or advertising
-cookies.
+The platform uses only cookies needed to work: a session cookie that keeps you signed in, a
+cookie that tells the home page you are signed in, and, while you log in or sign up with GitHub,
+GitLab or Codeberg, short-lived cookies (at most 15 minutes) that tie that site's answer to your
+browser. There are no analytics or advertising cookies.
 
 ## How long we keep it
 
 | Data | Kept |
 |---|---|
 | Account data | As long as your account exists; deleted on request. |
+| A sign-up with GitHub, GitLab or Codeberg that you didn't finish | Under 30 minutes. |
 | Metrics | 7 days per minute, 30 days per hour. |
 | Your apps, their settings and build logs | As long as the app exists; deleted with it. |
 | Your apps' volumes and databases | As long as you keep them; deleted with them or with the app. |

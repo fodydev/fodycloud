@@ -1,0 +1,8 @@
+{{/* "Continue with GitHub/GitLab/Codeberg" on the log-in and sign-up pages, for the forges the operator enabled. */}}
+{{define "forges"}}{{if .Forges}}
+<div class="forges">
+  {{range .Forges}}<a class="btn ghost block" href="/auth/{{.Name}}/start">Continue with {{.Label}}</a>
+  {{end}}
+  <p class="or muted center">or with your email</p>
+</div>
+{{end}}{{end}}

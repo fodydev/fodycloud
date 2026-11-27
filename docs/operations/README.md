@@ -11,6 +11,7 @@ by the [admin guide](../admin/overview.md), which every platform serves at
 |---|---|
 | [Install a platform](install.md) | set up FodyCloud on a new server |
 | [Addresses, DNS and certificates](addresses-and-tls.md) | configure DNS, or HTTPS doesn't work |
+| [Sign-in with GitHub, GitLab or Codeberg](forge-sign-in.md) | let students log in with a forge account, or turn it off |
 | [Admin CLI](admin-cli.md) | create admin accounts, script admin tasks, or the web interface is down |
 | [Upgrades](upgrades.md) | deploy a new version of FodyCloud |
 | [Backups and restore](backups-and-restore.md) | check backups, restore data, or move to a new server |

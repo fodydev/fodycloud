@@ -41,11 +41,15 @@ changes that student's plan; apps aren't restarted for you.
 ## Database migrations
 
 The control plane applies the SQL files of `internal/db/migrations/` in order at startup, each
-once.
+once, in a transaction: a failed migration changes nothing and the control plane doesn't start.
 
-> **FodyCloud is still pre-production.** The schema is a single file that may change without a
-> migration path: an upgrade can require a fresh database. Until the first production release,
-> back up before upgrading, and be ready to recreate the platform.
+From `v0.1.0` on, upgrades migrate your database **in place**:
+
+- migrations only move forward and keep your data; a released migration is never edited;
+- a new version's schema still works with the previous version's control plane, so you can go
+  back to it (`git checkout <old tag>` and `tofu apply`) without restoring the database. The
+  [upgrade notes](#upgrade-notes) say so when a version is an exception, or when going back needs
+  a step of its own.
 
 ## Before upgrading a real platform
 
@@ -59,9 +63,29 @@ once.
 ## Upgrade notes
 
 Versions follow [semantic versioning](https://semver.org). Before `v1.0.0`, a minor version
-(`v0.3.0`) can change the configuration or need a fresh database; a patch version (`v0.3.1`)
-only fixes bugs. Each version that needs something from you is listed here, newest first: new or
+(`v0.3.0`) can add or change settings; a patch version (`v0.3.1`) only fixes bugs. Each version that needs something from you is listed here, newest first: new or
 renamed `terraform.tfvars` settings, manual steps, and database changes.
 
-No versions have been released yet.
+### Next version (unreleased)
+
+- **New, optional: sign-in with GitHub, GitLab or Codeberg.** Off unless you set the new
+  `oauth_github`, `oauth_gitlab` or `oauth_codeberg` variables; with your current
+  `terraform.tfvars`, nothing changes for students. See
+  [Sign-in with GitHub, GitLab or Codeberg](forge-sign-in.md).
+- **Database:** migration `0002_oauth` adds two tables (`user_identities`, `oauth_signups`) and
+  changes no existing table. Going back to `v0.1.0` works on the migrated database; students who
+  signed up with a forge then have no way to log in until you upgrade again.
+- **Going back to `v0.1.0`:** first run `rm -rf /opt/fodycloud/src` on the server, then
+  `tofu apply` from `v0.1.0`. `v0.1.0` unpacks its source over the newer one without removing
+  the newer files, and its control plane then fails to build. From this version on, provisioning
+  removes them itself.
+- **Privacy policy:** a paragraph about forge accounts, and a new version (`2026-11-26`). If
+  you edited `docs/legal/privacy.md`, merge the change, and add the paragraph before you turn a
+  forge on.
+- `tofu plan` shows only `terraform_data.provision` being replaced.
+
+### v0.1.0
+
+The first public release. Platforms installed from earlier, unreleased commits may need a fresh
+database.
 

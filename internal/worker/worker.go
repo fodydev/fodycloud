@@ -77,6 +77,9 @@ func (w *Worker) RunExpiry(ctx context.Context, interval time.Duration) {
 		if err := w.Svc.CheckStorage(ctx); err != nil {
 			w.Log.Error("check storage", "err", err)
 		}
+		if err := w.Svc.PurgeForgeSignups(ctx); err != nil {
+			w.Log.Error("purge forge sign-ups", "err", err)
+		}
 		select {
 		case <-ctx.Done():
 			return
