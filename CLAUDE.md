@@ -4,7 +4,12 @@ FodyCloud is a student cloud-hosting platform. Students deploy apps from **publi
 
 ## Open-source only
 
-FodyCloud itself is **AGPL-3.0-or-later** (`LICENSE`, `NOTICE`, `TRADEMARKS.md`). New Go, shell, SQL and `.tf` files start with the two SPDX lines (`SPDX-FileCopyrightText: 2026 FodyDev and the FodyCloud contributors`, `SPDX-License-Identifier: AGPL-3.0-or-later`); other files are covered by `REUSE.toml`. Vendored code keeps its own license (text in `LICENSES/`, entry in `REUSE.toml` and `NOTICE`). Go dependencies must also be AGPL-compatible (`GO_ALLOWED_LICENSES` in `scripts/check.sh`). Commits are signed off (DCO, `git commit -s`).
+FodyCloud itself is **AGPL-3.0-or-later** (`LICENSE`, `NOTICE`, `TRADEMARKS.md`). New Go, shell, SQL and `.tf` files start with the two SPDX lines (`SPDX-FileCopyrightText: 2026 FodyDev and the FodyCloud contributors`, `SPDX-License-Identifier: AGPL-3.0-or-later`); other files are covered by `REUSE.toml`. Vendored code keeps its own license (text in `LICENSES/`, entry in `REUSE.toml` and `NOTICE`). Go dependencies must also be AGPL-compatible (`GO_ALLOWED_LICENSES` in `scripts/check.sh`). Commits follow [Conventional Commits](https://www.conventionalcommits.org/) and are signed off (DCO, `git commit -s`): `<type>(<scope>): <summary>`, e.g. `feat(oauth): add github, gitlab and codeberg sign-in`.
+
+- Types: `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `style`, `revert`.
+- Scope (optional): the area touched (`deployer`, `web`, `terraform`, `qemu`, `docs`…).
+- Summary: imperative, lower case, no trailing period; details go in the body.
+- Breaking changes (API, CLI, config or `tofu` variables): `!` after the scope and a `BREAKING CHANGE:` footer.
 
 FodyCloud is built **only with open-source software** (OSI-approved licenses). Before adding any tool, library, container image or service, check its license, and check again on major upgrades, since several projects have relicensed. Prefer community forks when an upstream goes source-available:
 
