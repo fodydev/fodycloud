@@ -8,7 +8,10 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/fodydev/fodycloud/internal/oauth"
 )
 
 // Config holds every setting of the control plane.
@@ -67,6 +70,11 @@ type Config struct {
 	// built from (absent in development builds).
 	SourceURL     string
 	SourceArchive string
+
+	// Sign-in with a forge, keyed by provider (github, gitlab, codeberg).
+	// Each is optional: a provider is offered only when its client ID and
+	// secret are set. With none, students use email and password only.
+	OAuth map[string]oauth.App
 }
 
 // Load reads the configuration from environment variables.
@@ -133,6 +141,12 @@ func Load() (*Config, error) {
 	}
 	c.SourceURL = env("FC_SOURCE_URL", "https://github.com/fodydev/fodycloud")
 	c.SourceArchive = env("FC_SOURCE_ARCHIVE", "/usr/share/fodycloud/source.tar.gz")
+	c.OAuth = map[string]oauth.App{}
+	for _, name := range []string{oauth.GitHub, oauth.GitLab, oauth.Codeberg} {
+		p := "FC_OAUTH_" + strings.ToUpper(name) + "_"
+		c.OAuth[name] = oauth.App{ClientID: os.Getenv(p + "CLIENT_ID"), ClientSecret: os.Getenv(p + "CLIENT_SECRET"),
+			URL: os.Getenv(p + "URL"), Label: os.Getenv(p + "LABEL")}
+	}
 	c.DiskQuota = env("FC_DISK_QUOTA", "false") == "true"
 	c.SecureCookies = env("FC_SECURE_COOKIES", "true") == "true"
 	if c.DatabaseURL == "" {

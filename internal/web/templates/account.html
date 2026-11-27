@@ -48,7 +48,35 @@
   </div>
 </section>
 
+{{if .Data.Forges}}
+<section class="card">
+  <div class="card-head"><div><h2>Sign-in methods</h2>
+    <p>Log in with your email and password, or with a connected account.
+      {{if not .Data.HasPassword}}Your account has no password yet.{{end}}</p></div></div>
+  <div class="table-wrap">
+  <table class="list">
+    <tbody>
+      {{range .Data.Forges}}
+      <tr>
+        <td>{{.Label}}</td>
+        <td>{{if .Linked}}Connected{{if .Username}} as <strong>{{.Username}}</strong>{{end}}{{if not .Enabled}} <span class="muted">(no longer offered on this platform)</span>{{end}}{{else}}<span class="muted">Not connected</span>{{end}}</td>
+        <td>
+          {{if .Linked}}
+          <form method="post" action="/account/forges/{{.Name}}/disconnect"><button class="btn ghost small">Disconnect</button></form>
+          {{else}}
+          <form method="post" action="/account/forges/{{.Name}}/connect"><button class="btn small">Connect</button></form>
+          {{end}}
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+</section>
+{{end}}
+
 <div class="grid-2">
+  {{if .Data.HasPassword}}
   <section class="card">
     <div class="card-head"><div><h2>Change password</h2><p>Your other sessions are signed out; API tokens keep working.</p></div></div>
     <div class="card-body">
@@ -61,13 +89,28 @@
       </form>
     </div>
   </section>
+  {{else}}
+  <section class="card">
+    <div class="card-head"><div><h2>Set a password</h2><p>To also log in with your email and password. Within 15 minutes of logging in.</p></div></div>
+    <div class="card-body">
+      <form method="post" action="/account/set-password" class="stack">
+        <input type="email" name="email" value="{{.User.Email}}" autocomplete="username" hidden>
+        <label>New password <small class="hint">At least 10 characters</small>
+          <input type="password" name="password" required minlength="10" maxlength="72" autocomplete="new-password"></label>
+        <label>New password again <input type="password" name="password2" required minlength="10" maxlength="72" autocomplete="new-password"></label>
+        <div><button class="btn small">Set password</button></div>
+      </form>
+    </div>
+  </section>
+  {{end}}
 
   <section class="card">
     <div class="card-head"><div><h2>Change email</h2><p>Now: <strong>{{.User.Email}}</strong>. We send a link to the new address; it changes when you open it.</p></div></div>
     <div class="card-body">
       <form method="post" action="/account/email" class="stack">
         <label>New email <input type="email" name="email" required autocomplete="email"></label>
-        <label>Password <input type="password" name="password" required autocomplete="current-password"></label>
+        {{if .Data.HasPassword}}<label>Password <input type="password" name="password" required autocomplete="current-password"></label>
+        {{else}}<p class="hint">Within 15 minutes of logging in.</p>{{end}}
         <div><button class="btn small">Send the confirmation link</button></div>
       </form>
     </div>
@@ -79,7 +122,7 @@
     <p>Deletes your account and all your apps, their deployments, settings, domains and metrics, right away. This can't be undone.</p></div></div>
   <div class="card-body">
     <form method="post" action="/account/delete" class="grid-form">
-      <label>Password <input type="password" name="password" required autocomplete="current-password"></label>
+      {{if .Data.HasPassword}}<label>Password <input type="password" name="password" required autocomplete="current-password"></label>{{end}}
       <label>Type your email to confirm <input name="confirm" required placeholder="{{.User.Email}}" autocomplete="off"></label>
       <div><button class="btn danger small">Delete my account and my apps</button></div>
     </form>

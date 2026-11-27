@@ -39,6 +39,7 @@ var Nav = []Section{
 		{"user/databases", "Databases"},
 		{"user/plans-and-limits", "Plans and limits"},
 		{"user/account-and-security", "Account and security"},
+		{"user/sign-in-with-a-forge", "Log in with GitHub, GitLab or Codeberg"},
 	}},
 	{Title: "Developer guide", Pages: []Page{
 		{"developer/overview", "Developer overview"},
@@ -85,6 +86,6 @@ var LegalNav = []Section{
 // student's acceptance. Change it (and LegalEffectiveDate) when the texts
 // change materially.
 const (
-	LegalVersion       = "2026-11-23"
-	LegalEffectiveDate = "23 November 2026"
+	LegalVersion       = "2026-11-26"
+	LegalEffectiveDate = "26 November 2026"
 )

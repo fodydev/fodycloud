@@ -45,8 +45,10 @@ func (w *Web) dashboardHandler() http.Handler {
 		w.serveDocs(rw, r, publicDocs(), w.docs, slug, u)
 	})
 	w.signInRoutes(mux)
+	w.forgeRoutes(mux)
 	w.appRoutes(mux)
 	w.accountRoutes(mux)
+	w.forgeAccountRoutes(mux)
 	mux.HandleFunc("/", w.notFound)
 	return mux
 }
@@ -414,8 +416,14 @@ func (w *Web) accountRoutes(mux *http.ServeMux) {
 	account := func(rw http.ResponseWriter, r *http.Request, u *auth.User, newToken string) {
 		info, _ := w.Svc.PlanInfo(r.Context(), u)
 		toks, _ := w.Auth.ListTokens(r.Context(), u.ID)
+		ids, _ := w.Auth.Identities(r.Context(), u.ID)
+		hasPassword, err := w.Auth.HasPassword(r.Context(), u.ID)
+		if err != nil {
+			hasPassword = true // the forms then ask for the password, which is the safe side
+		}
 		rw.Header().Set("Cache-Control", "no-store")
-		w.render(rw, r, "account", "Account", u, map[string]any{"Plan": info, "Tokens": toks, "NewToken": newToken})
+		w.render(rw, r, "account", "Account", u, map[string]any{"Plan": info, "Tokens": toks, "NewToken": newToken,
+			"HasPassword": hasPassword, "Forges": w.forgeMethods(ids)})
 	}
 	mux.HandleFunc("GET /account", w.authed(func(rw http.ResponseWriter, r *http.Request, u *auth.User) {
 		account(rw, r, u, "")
@@ -464,8 +472,8 @@ func (w *Web) accountRoutes(mux *http.ServeMux) {
 		return nil
 	}))
 	mux.HandleFunc("POST /account/delete", w.passwordForm(func(rw http.ResponseWriter, r *http.Request, u *auth.User) error {
-		if _, err := w.Auth.Authenticate(r.Context(), u.Email, r.FormValue("password")); err != nil {
-			return service.ErrWrongPassword
+		if err := w.Svc.ConfirmIdentity(r.Context(), w.Auth, u, r.FormValue("password")); err != nil {
+			return err
 		}
 		if err := w.Svc.DeleteAccount(r.Context(), w.Auth, u, r.FormValue("confirm")); err != nil {
 			return err

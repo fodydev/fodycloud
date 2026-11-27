@@ -232,6 +232,27 @@ the sign-in page, and contact the FodyCloud team.
 
 — FodyCloud
 {{end}}
+{{define "forge-connected"}}Subject: {{.Provider}} was connected to your FodyCloud account
+Hello,
+
+The {{.Provider}} account {{.Username}} was connected to your FodyCloud
+account. You can now log in with it.
+
+If you didn't do it, disconnect it on the Account page, change your password,
+and contact the FodyCloud team.
+
+— FodyCloud
+{{end}}
+{{define "forge-disconnected"}}Subject: {{.Provider}} was disconnected from your FodyCloud account
+Hello,
+
+{{.Provider}} was disconnected from your FodyCloud account: you can't log in
+with it any more.
+
+If you didn't do it, change your password and contact the FodyCloud team.
+
+— FodyCloud
+{{end}}
 {{define "email-change-confirm"}}Subject: Confirm your new FodyCloud email
 Hello,
 

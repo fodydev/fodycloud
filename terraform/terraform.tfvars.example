@@ -46,3 +46,11 @@ admin_email = "you@fodycloud.example" # initial dashboard admin; password: tofu 
 # --- Abuse protection ---------------------------------------------------------
 # abuse_cpu_minutes     = 30               # minutes at the CPU limit before an app is flagged
 # signup_limit_per_hour = 5                # signups / password resets per IP
+
+# --- Optional: sign-in with GitHub, GitLab or Codeberg (off unless set) ------
+# Register an OAuth app on the forge with the callback URL
+# https://dashboard.<base_domain>/auth/<github|gitlab|codeberg>/callback.
+# See docs/operations/forge-sign-in.md.
+# oauth_github   = { client_id = "...", client_secret = "..." }
+# oauth_gitlab   = { client_id = "...", client_secret = "..." }   # url = "https://gitlab.example.edu", label = "University GitLab"
+# oauth_codeberg = { client_id = "...", client_secret = "..." }   # url = another Forgejo/Gitea, label = its button name

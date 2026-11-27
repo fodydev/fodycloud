@@ -185,6 +185,10 @@ services:
       FC_OPERATOR_DATA_LOCATION: ${OPERATOR_DATA_LOCATION}
       FC_SOURCE_URL: ${SOURCE_URL}
       FC_PLANS_FILE: /etc/fodycloud/plans.json
+    # Sign-in with a forge (FC_OAUTH_*), rendered by OpenTofu from the
+    # oauth_* variables; empty when none is configured.
+    env_file:
+      - ./config/oauth.env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./config/plans.json:/etc/fodycloud/plans.json:ro

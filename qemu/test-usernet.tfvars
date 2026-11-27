@@ -42,3 +42,8 @@ operator_name          = "FodyCloud Test Operator"
 operator_country       = "Cameroon"
 operator_contact_email = "privacy@fodycloud.internal"
 operator_data_location = "a test VM"
+
+# Sign-in with a forge: a dummy GitHub app (the e2e suite checks the button and
+# the redirect to github.com, never signs in). The full flow uses the local
+# Forgejo as "Codeberg", enabled by qemu/e2e/25-forge-sign-in.sh.
+oauth_github = { client_id = "e2e-dummy-client-id", client_secret = "e2e-dummy-client-secret" }

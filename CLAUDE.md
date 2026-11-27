@@ -14,7 +14,7 @@ FodyCloud is built **only with open-source software** (OSI-approved licenses). B
 | **Valkey** (BSD-3) | Redis 7.4–7.x | Redis 7.4 is RSALv2/SSPL |
 | SeaweedFS, Garage (S3 for self-hosting and tests) | MinIO images | MinIO stopped publishing community images |
 
-Current stack, all OSI: Go, PostgreSQL, Valkey, Traefik, Docker Engine/Moby, BuildKit, Railpack, docker-socket-proxy, restic, htmx, pgx, goldmark, the MCP Go SDK, OpenTofu, Debian, BusyBox (apps' health checks), QEMU, Mailpit and SeaweedFS. Planned for OAuth tests: mock-oauth2-server (MIT). App runtimes installed by Railpack in students' images: Python, Node.js, Bun, PHP with FrankenPHP and Composer, Go, OpenJDK with Maven/Gradle, Caddy (static sites).
+Current stack, all OSI: Go, PostgreSQL, Valkey, Traefik, Docker Engine/Moby, BuildKit, Railpack, docker-socket-proxy, restic, htmx, pgx, goldmark, the MCP Go SDK, OpenTofu, Debian, BusyBox (apps' health checks), QEMU, Mailpit, SeaweedFS and Forgejo (GPL-3.0-or-later, the e2e suite's stand-in for Codeberg), and golang.org/x/oauth2. App runtimes installed by Railpack in students' images: Python, Node.js, Bun, PHP with FrankenPHP and Composer, Go, OpenJDK with Maven/Gradle, Caddy (static sites).
 
 External *services* chosen by the operator (an S3 provider, an SMTP provider, GitHub/GitLab/Codeberg, Let's Encrypt) aren't software we ship. Keep them swappable through standard protocols (S3, SMTP, OAuth/OIDC, ACME).
 
@@ -35,7 +35,7 @@ External *services* chosen by the operator (an S3 provider, an SMTP provider, Gi
   - Platform alerts are a host script, `terraform/files/health.sh` (`fodycloud-health.timer`, every 15 min). It checks disk, memory and certificate expiry from Traefik's `acme-*.json`, and mails admins through `fodycloud admin notify`, at most once a day per alert, with a "Resolved" email after.
   - `internal/mail`: email goes into the `email_outbox` table and a background loop delivers it (STARTTLS required when credentials are sent). `internal/ratelimit` holds the in-memory token buckets and the login lockout.
   - `internal/dockercli`: wraps the **docker CLI** rather than the SDK, because the CLI is already needed for buildx.
-  - `internal/db/migrations/*.sql`: embedded and applied on startup. To change the schema, add a new numbered file; never edit an applied one.
+  - `internal/db/migrations/*.sql`: embedded and applied on startup. To change the schema, add a new numbered file; never edit an applied one. Others run released versions: migrations are additive and must leave the schema usable by the previous release (rollback without a restore); note them in `docs/operations/upgrades.md`.
   - `internal/web/templates`, `internal/web/static`: embedded. htmx is vendored (`static/htmx.min.js`, 2.0.11), with no CDN.
 - **`docs/`:** the user guide (`docs/user/`), the developer guide (`docs/developer/`) and the admin guide (`docs/admin/`), embedded by `docs/docs.go` (navigation: `docs.Nav`, `docs.AdminNav`) and rendered by `internal/web/docs.go` (goldmark, raw HTML off).
 - **Sites (`internal/sites`, dispatch in `internal/web/router.go`):** one role per host.
@@ -112,6 +112,11 @@ Never touch the VM (or run `run-vm.sh`/`destroy-vm.sh`) while a test suite is ru
   - The API routes `fca_` tokens to `/v1/admin` only. MCP accepts student tokens only.
   - Students manage their own account on the Account page: change password (other sessions signed out, tokens kept), change email (confirmed by a link to the new address), delete the account (cascades through foreign keys; `Deployer.Remove` first). Forms that ask for the password go through `web.passwordForm`, whose wrong answers count toward the account lockout. Account deletion is never exposed over MCP.
   - Admins can't be removed from the panel; the CLI's `remove-admin` refuses the last admin.
+  - **Sign-in with a forge** (`internal/oauth`, `service/oauth.go`, `web/oauth.go`): GitHub, GitLab and Codeberg (or a self-hosted GitLab/Forgejo), each off until the operator sets `oauth_<forge>` (→ `config/oauth.env`, compose `env_file`). Students only; admins and tokens are unchanged.
+    - State and PKCE verifier live in the host-only `__Host-fc_oauth` cookie; a pending sign-up's token in `__Host-fc_signup` (never in a URL). The forge's access token is used once, never stored.
+    - Identities are keyed by `(issuer, subject)`: the instance's base URL and the numeric account ID, never the username.
+    - Only verified primary emails. An email already used by any account is refused, never merged: the student links the forge from the Account page.
+    - Forge-only accounts have `password_hash = ''`. Sensitive changes go through `Service.ConfirmIdentity` (password, or a sign-in within `RecentSignIn`); the last sign-in method can't be removed.
   - Custom domains per app come from the plan (`max_custom_domains`); `AddDomain` counts and inserts under a lock on the app.
 - **Storage and databases** (`service/storage.go`, `deployer/storage.go`, `internal/appsdb`): at most one of each per app, rows in `app_services`, sizes from the plan (`volume_size`, `db_size`/`db_connections`, `cache_memory`).
   - Volume `fc-vol-<app>`: local volume with an XFS quota (`--opt size=`), mounted at `/data`; shared by the old and new containers during the blue/green swap. A removed volume is deleted after the restart that unmounts it (`CleanupStorage`).
@@ -120,7 +125,7 @@ Never touch the VM (or run `run-vm.sh`/`destroy-vm.sh`) while a test suite is ru
   - Storage containers carry `fodycloud.service-of`, **never** `fodycloud.app`: deploys, sleep and metrics select app containers by `fodycloud.app`, so the label would get the cache removed or stopped.
   - The connection variables are injected at build and run time (`JobConfig`); `service.ReservedEnv` can't be set by students. Volumes and the apps' databases are in the nightly restic backup (tags `volumes`, `apps-postgres`).
 - **Email:** send with `s.mail(ctx, to, "<template>", data)`. Templates live in `internal/mail` (first line `Subject: …`). Never send synchronously from a request.
-- **Test-only services** (Mailpit, SeaweedFS) live in `terraform/files/compose.test.yaml` and run only when `test_fixtures = true` (through `COMPOSE_FILE` in `.env`). Production code must not depend on them.
+- **Test-only services** (Mailpit, SeaweedFS, Forgejo) live in `terraform/files/compose.test.yaml` and run only when `test_fixtures = true` (through `COMPOSE_FILE` in `.env`). Production code must not depend on them.
 - **Mutating service methods call `requireWrite(u)`**, which enforces the `apps:read` / `apps:write` token scopes.
 - **Another user's app returns `ErrNotFound`, not `ErrForbidden`**, so the app's existence doesn't leak.
 - **Plans are only assigned by admins** (no online payment yet). They live in `subscriptions`, with an audit row in `plan_changes`. `ApplyPlan` enforces a plan on live containers.

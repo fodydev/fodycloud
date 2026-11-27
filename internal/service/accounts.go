@@ -101,10 +101,10 @@ func (s *Service) ChangePassword(ctx context.Context, a *auth.Store, u *auth.Use
 
 // RequestEmailChange starts a change of email address: a link goes to the
 // new address, and the change applies only when it is used. The current
-// address is told.
+// address is told. password is checked by ConfirmIdentity.
 func (s *Service) RequestEmailChange(ctx context.Context, a *auth.Store, u *auth.User, newEmail, password string) error {
-	if _, err := a.Authenticate(ctx, u.Email, password); err != nil {
-		return ErrWrongPassword
+	if err := s.ConfirmIdentity(ctx, a, u, password); err != nil {
+		return err
 	}
 	email, err := auth.NormalizeEmail(newEmail)
 	if err != nil {

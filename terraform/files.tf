@@ -119,6 +119,24 @@ locals {
         compose_file           = var.test_fixtures ? "compose.yaml:compose.test.yaml" : "compose.yaml"
       })
     }
+    # Sign-in with a forge: only the providers the operator configured
+    # (an empty file = email and password only). Read by the control plane
+    # through compose's env_file.
+    "/opt/fodycloud/config/oauth.env" = {
+      mode = "0600"
+      content = join("", [
+        for name, app in {
+          GITHUB   = var.oauth_github == null ? null : merge(var.oauth_github, { url = "", label = "" })
+          GITLAB   = var.oauth_gitlab
+          CODEBERG = var.oauth_codeberg
+          } : app == null ? "" : join("", [
+            "FC_OAUTH_${name}_CLIENT_ID=${app.client_id}\n",
+            "FC_OAUTH_${name}_CLIENT_SECRET=${app.client_secret}\n",
+            app.url == "" ? "" : "FC_OAUTH_${name}_URL=${app.url}\n",
+            app.label == "" ? "" : "FC_OAUTH_${name}_LABEL=${app.label}\n",
+        ])
+      ])
+    }
     "/opt/fodycloud/config/admin.env" = {
       mode    = "0600"
       content = var.admin_email != "" ? "ADMIN_EMAIL=${var.admin_email}\nADMIN_PASSWORD=${random_password.admin[0].result}\n" : ""

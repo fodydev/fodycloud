@@ -22,6 +22,39 @@ services:
       - seaweedfs:/data
     mem_limit: 512m
 
+  # A local Forgejo, the software behind Codeberg: the e2e suite signs in
+  # with it as the "Codeberg" provider (qemu/e2e/26-forge-sign-in.sh creates
+  # its user and OAuth app, and writes config/forge-test.env). The control
+  # plane and the tests (from the VM, port 3000 on 127.0.0.1) use the same URL.
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:17.0.2
+    restart: unless-stopped
+    environment:
+      FORGEJO__security__INSTALL_LOCK: "true"
+      FORGEJO__database__DB_TYPE: sqlite3
+      FORGEJO__server__ROOT_URL: http://git.${base_domain}:3000/
+      FORGEJO__server__HTTP_PORT: "3000"
+      FORGEJO__server__DISABLE_SSH: "true"
+      FORGEJO__service__DISABLE_REGISTRATION: "true"
+      FORGEJO__oauth2__ENABLED: "true"
+    volumes:
+      - forgejo:/data
+    # platform is internal: edge carries the published port.
+    networks:
+      platform:
+        aliases: [git.${base_domain}]
+      edge: {}
+    ports:
+      - "127.0.0.1:3000:3000"
+    mem_limit: 256m
+
+  # The local Forgejo's OAuth app, as the "Codeberg" provider (absent until
+  # the e2e suite creates it).
+  control-plane:
+    env_file:
+      - path: ./config/forge-test.env
+        required: false
+
 %{ if test_ca ~}
   # Local ACME CA: Traefik gets real certificates through the same HTTP-01
   # flow as with Let's Encrypt. Its root (made by qemu/ca-init.sh) is
@@ -49,6 +82,7 @@ networks:
 
 volumes:
   seaweedfs:
+  forgejo:
 %{ if test_ca ~}
   stepca:
 %{ endif ~}

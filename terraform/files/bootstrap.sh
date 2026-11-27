@@ -40,6 +40,21 @@ install_staged() {
   done < <(find "$STAGE" -type f -print0)
 }
 changed() { local p; for p in "$@"; do [[ -n "${CHANGED[$p]:-}" ]] && return 0; done; return 1; }
+# The control plane's source (/opt/fodycloud/src) is shipped whole: remove the
+# files the staged version doesn't have, or a file deleted or renamed since the
+# previous version would still be compiled into the image and published in its
+# source archive.
+prune_source() {
+  local f
+  [[ -d "$STAGE/opt/fodycloud/src" && -d /opt/fodycloud/src ]] || return 0
+  while IFS= read -r -d '' f; do
+    if [[ ! -f "$STAGE$f" ]]; then
+      rm -f "$f"
+      echo "   removed $f"
+    fi
+  done < <(find /opt/fodycloud/src -type f -print0)
+  find /opt/fodycloud/src -mindepth 1 -type d -empty -delete
+}
 
 # --------------------------------------------------------------------------
 log "Base packages"
@@ -83,6 +98,7 @@ fi
 # --------------------------------------------------------------------------
 log "Configuration files"
 install_staged
+prune_source
 
 # --------------------------------------------------------------------------
 log "Kernel parameters"

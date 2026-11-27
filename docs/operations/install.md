@@ -47,6 +47,10 @@ For a real platform, also set:
   `source_url` to your fork, and see [TRADEMARKS.md](../../TRADEMARKS.md)
   for the name.
 
+Optional: `oauth_github`, `oauth_gitlab` and `oauth_codeberg` let students log in with those
+forges as well as with email and password; all are off by default. See
+[Sign-in with GitHub, GitLab or Codeberg](forge-sign-in.md).
+
 Optional tuning: `alert_disk_percent`, `alert_memory_percent` and `alert_cert_days` (platform
 alerts, see [Monitoring](incidents.md#platform-alerts)), the plans' `abandon_after_days` and
 `abandon_grace_days` (unused apps).
